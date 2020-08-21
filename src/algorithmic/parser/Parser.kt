@@ -134,6 +134,13 @@ class Parser constructor(private val scanner: Scanner) {
             return assignment()
 
         //if( see(Token.ԵԹԵ) )
+        //    return branching()
+
+        //if( see(Token.ՔԱՆԻ) )
+        //    return repetition()
+
+        if( see(Token.ԱՐԴՅՈՒՆՔ) )
+            return result()
 
         throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.line)
     }
@@ -180,10 +187,62 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ԱՎԱՐՏ)
     }
 
+    // արդյունք
+    private fun result(): Statement
+    {
+        match(Token.ԱՐԴՅՈՒՆՔ)
+        val value = expression()
+        return Result(value)
+    }
+
     // արտահայտություն
     private fun expression(): Expression
     {
-        return factor()
+        return equality()
+    }
+
+    // հավասարություն
+    private fun equality(): Expression
+    {
+        var res = comparison()
+        if( see(Token.EQ, Token.NE) ) {
+            val oper = asOperation(pass())
+            res = Binary(oper, res, comparison())
+        }
+        return res
+    }
+
+    // համեմատություն
+    private fun comparison(): Expression
+    {
+        var res = addition()
+        if( see(Token.GT, Token.GE, Token.LT, Token.LE) ) {
+            val oper = asOperation(pass())
+            res = Binary(oper, res, addition())
+        }
+        return res
+    }
+
+    // գումար
+    private fun addition(): Expression
+    {
+        var res = multiplication()
+        while( see(Token.ADD, Token.SUB) ) {
+            val oper = asOperation(pass())
+            res = Binary(oper, res, multiplication())
+        }
+        return res
+    }
+
+    // արտադրյալ
+    private fun multiplication(): Expression
+    {
+        var res = factor()
+        while( see(Token.MUL, Token.DIV) ) {
+            val oper = asOperation(pass())
+            res = Binary(oper, res, factor())
+        }
+        return res
     }
 
     // ամենապարզ արտահայտությունը
@@ -225,7 +284,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(exp) )
             return pass()
 
-        throw ParseError("${lookahead.line} տողում սպասվում է $exp, բայց գրված է ${lookahead.token}։", scanner.line)
+        throw ParseError("Սպասվում է $exp, բայց գրված է «${lookahead.value}»։", scanner.line)
     }
 
     // որոնել սիմվոլների աղյուսակում

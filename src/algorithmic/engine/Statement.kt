@@ -4,19 +4,20 @@ interface Statement
 typealias StatementList = ArrayList<Statement>
 
 // վերագրման կառուցվածքը
-class Assignment constructor(val sym: Symbol, val value: Expression) : Statement {
-    override fun toString(): String =
-            "$sym := $value"
+class Assignment(val sym: Symbol, val value: Expression) : Statement {
+    override fun toString(): String = "${sym.name} := $value"
 }
 
 // ճյուղավորման կառուցվածքը
-class Branching constructor(val condition: Expression, val decision: StatementList) : Statement {
+class Branching(val condition: Expression, val decision: StatementList) : Statement {
 }
 
 // կրկնման կառուցվածքը
-class Repetition constructor(val condition: Expression, val body: StatementList) {
+class Repetition(val condition: Expression, val body: StatementList) {
 }
 
 // արդյունքի կառուցվածքը
-class Result constructor(val value: Expression) : Statement {
+class Result(val value: Expression) : Statement {
+    override fun toString(): String =
+        String.format("ԱՐԴՅՈՒՆՔ %s", value)
 }

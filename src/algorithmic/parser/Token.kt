@@ -27,24 +27,24 @@ enum class Token {
 //    STEP,
 //    CALL,
 
-//    ADD,
-//    SUB,
-//    AMP,
-//    MUL,
-//    DIV,
-//    MOD,
-//    POW,
+    ADD, // +
+    SUB, // -
+//    AMP, // &
+    MUL, // *
+    DIV, // /
+//    MOD, // \
+//    POW, // ^
 
-//    EQ,
-//    NE,
-//    GT,
-//    GE,
-//    LT,
-//    LE,
+    EQ, // =
+    NE, // <>
+    GT, // >
+    GE, // >=
+    LT, // <
+    LE, // <=
 
-//    AND,
-//    OR,
-//    NOT,
+//    AND, // ԵՎ
+//    OR, // ԿԱՄ
+//    NOT, // ՈՉ
     ՎԵՐԱԳՐԵԼ, // :=
 
     ՎԵՐՋԱԿԵՏ, // :, ։

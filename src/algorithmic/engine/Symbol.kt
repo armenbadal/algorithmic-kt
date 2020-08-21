@@ -1,7 +1,7 @@
 package algorithmic.engine
 
-class Symbol constructor(val type: Type, val name: String) {
-    enum class Type constructor(val text: String) {
+class Symbol(val type: Type, val name: String) {
+    enum class Type(val text: String) {
         VOID(""),
         NUMBER("ԹԻՎ"),
         TEXT("ՏԵՔՍՏ"),

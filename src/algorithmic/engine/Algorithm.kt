@@ -9,7 +9,7 @@ class Algorithm constructor(val name: String, val type: Symbol.Type, val paramet
     {
         // TODO: վերանայել այս ֆունկցիան
         val sb = StringBuilder()
-        sb.append("ԱԼԳ ${type.text} $name(")
+        sb.append("ԱԼԳ ${type.text} $name( ")
         parameters.forEach { sb.append("${it.type.text} ${it.name} ") }
         sb.append(")\n")
         sb.append("ՍԿԻԶԲ\n")

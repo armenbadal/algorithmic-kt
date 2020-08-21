@@ -4,16 +4,34 @@ package algorithmic.engine
 interface Expression
 
 // թվային հաստատուն
-data class Numeric constructor(val value: Double) : Expression
+class Numeric(val value: Double) : Expression {
+    override fun toString(): String = value.toString()
+}
 
 // տեքստային հաստատուն
-data class Text constructor(val value: String) : Expression
+class Text(val value: String) : Expression {
+    override fun toString(): String = value
+}
 
 // փոփոխական
-data class Variable constructor(val sym: Symbol) : Expression
+class Variable(val sym: Symbol) : Expression {
+    override fun toString(): String = sym.name
+}
+
+enum class Operation(val text: String) {
+    ADDITION("+"),
+    SUBTRACTION("-"),
+    MULTIPLICATION("*"),
+    DIVISION("/");
+
+    override fun toString(): String = text
+}
 
 // ունար գործողություն
 
 
 // բինար գործողություն
-
+class Binary(val operation: Operation, val left: Expression, val right: Expression) : Expression {
+    override fun toString(): String =
+        String.format("(%s %s %s)", left, operation, right)
+}

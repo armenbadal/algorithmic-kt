@@ -46,7 +46,7 @@ class Scanner constructor(filename: String) {
             return textLiteral()
 
         // վերագրում և այլն
-        if( ch == ':' )
+        if( ":=<>+-*/".contains(ch) )
             return operation()
 
         return metasymbol()
@@ -128,7 +128,42 @@ class Scanner constructor(filename: String) {
             return Lexeme(Token.ՎԵՐՋԱԿԵՏ, ":", line)
         }
 
-        return Lexeme(Token.ԱՆԾԱՆՈԹ, "$ch", line)
+        if( ch == '=' )
+            return Lexeme(Token.EQ, "=", line)
+
+        if( ch == '<' ) {
+            ch = read()
+            if( ch == '>' ) {
+                ch = read()
+                return Lexeme(Token.NE, "<>", line)
+            }
+            else if( ch == '=' ) {
+                ch = read()
+                return Lexeme(Token.LE, "<=", line)
+            }
+            return Lexeme(Token.LT, "<", line)
+        }
+
+        if( ch == '>' ) {
+            ch = read()
+            if( ch == '=' ) {
+                ch = read()
+                return Lexeme(Token.GE, ">=", line)
+            }
+            return Lexeme(Token.GT, ">", line)
+        }
+
+        val ms = ch
+        val tok = when( ms ) {
+            '+' -> Token.ADD
+            '-' -> Token.SUB
+            '*' -> Token.MUL
+            '/' -> Token.DIV
+            else -> Token.ԱՆԾԱՆՈԹ
+        }
+        ch = read()
+
+        return Lexeme(tok, "$ms", line)
     }
 
     // մետասիմվոլներ
@@ -143,8 +178,8 @@ class Scanner constructor(filename: String) {
             ';' -> Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ
             else -> Token.ԱՆԾԱՆՈԹ
         }
-
         ch = read()
+
         return Lexeme(kind, ms.toString(), line)
     }
 
