@@ -3,17 +3,26 @@ package algorithmic.parser
 import algorithmic.engine.*
 
 class Parser constructor(private val scanner: Scanner) {
+    // look-a-head սիմվոլը
     private var lookahead = scanner.next()
 
-    // հայտարարությունները սկսվում են տիպի անունով
-    private val firstDecl = arrayOf(Token.ԹԻՎ, Token.ՏԵՔՍՏ)
+    // հրամանների FIRST բազմությունը
     private val firstStat = arrayOf(Token.ԱՆՈՒՆ, Token.ԵԹԵ, Token.ՔԱՆԻ, Token.ԱՐԴՅՈՒՆՔ)
 
+    // վերլուծվող ծրագիրը
+    private val program = Program("")
+
+    // սիմվոլների աղյուսակ
+    private val symbolTable = arrayListOf<Symbol>()
+
+
     // վերլուծել ծրագիրը
-    fun parse()
+    fun parse(): Program
     {
         while( see(Token.ԱԼԳՈՐԻԹՄ) )
             algorithm()
+
+        return program
     }
 
     // վերլուծել մեկ ալգորիթմ
@@ -31,19 +40,27 @@ class Parser constructor(private val scanner: Scanner) {
             match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
         }
 
-        val algo = Algorithm(name, rtype, params)
-        println(algo)
+        // մաքրել սիմվոլների աղյուսակը...
+        symbolTable.clear()
+        // ... ու ավելացնել ալգորիթմի պարամետրերը
+        symbolTable.addAll(params)
+
+        // ստեղծել նոր ալգորիթմի օբյեկտը
+        val current = Algorithm(name, rtype, params)
 
         // լոկալ անուններ
         if ( !see(Token.ՍԿԻԶԲ) ) {
             val locals = declarationList(false, Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)
-            algo.locals.addAll(locals)
+            symbolTable.addAll(locals)
         }
 
         // մարմին
         match(Token.ՍԿԻԶԲ)
-        sequence()
+        val seq = sequence()
         match(Token.ՎԵՐՋ)
+        current.body.addAll(seq)
+
+        println(current)
     }
 
     // տիպի վերլուծություն
@@ -58,7 +75,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( opt )
             return Symbol.Type.VOID
 
-        throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։")
+        throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.line)
     }
 
     // վերլուծել մեկ հայտարարություն
@@ -95,18 +112,40 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // հրամանների հաջորդականություն
-    private fun sequence(): Sequence
+    private fun sequence(): List<Statement>
     {
-        return Sequence()
+        val seq = arrayListOf<Statement>()
+
+        if( see(*firstStat) ) {
+            seq.add(statement())
+            while (see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)) {
+                pass()
+                seq.add(statement())
+            }
+        }
+
+        return seq
+    }
+
+    // մեկ կառուցվածքի վերլուծություն
+    private fun statement(): Statement
+    {
+        if( see(Token.ԱՆՈՒՆ) )
+            return assignment()
+
+        //if( see(Token.ԵԹԵ) )
+
+        throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.line)
     }
 
     // վերագրում
     private fun assignment(): Assignment
     {
         val name = match(Token.ԱՆՈՒՆ)
+        val sym = lookup(name)
         match(Token.ՎԵՐԱԳՐԵԼ)
         val value = expression()
-        return Assignment(name, value)
+        return Assignment(sym, value)
     }
 
     // ճյուղավորում
@@ -160,10 +199,10 @@ class Parser constructor(private val scanner: Scanner) {
             }
             Token.ԱՆՈՒՆ -> {
                 val name = pass()
-                Variable(name)
+                Variable(lookup(name))
             }
             else -> {
-                throw ParseError("Ստպասվում է պարզ արտահայտություն")
+                throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.line)
             }
         }
 
@@ -186,6 +225,16 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(exp) )
             return pass()
 
-        throw ParseError("Սխալ: ${lookahead.line} տողում սպասվում է $exp, բայց գրված է ${lookahead.token}։")
+        throw ParseError("${lookahead.line} տողում սպասվում է $exp, բայց գրված է ${lookahead.token}։", scanner.line)
+    }
+
+    // որոնել սիմվոլների աղյուսակում
+    private fun lookup(name: String): Symbol
+    {
+        for( sym in symbolTable )
+            if( sym.name == name )
+                return sym
+
+        throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.line)
     }
 }

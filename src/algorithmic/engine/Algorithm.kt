@@ -3,7 +3,7 @@ package algorithmic.engine
 import java.lang.StringBuilder
 
 class Algorithm constructor(val name: String, val type: Symbol.Type, val parameters: List<Symbol>) {
-    val locals = arrayListOf<Symbol>()
+    val body = arrayListOf<Statement>()
 
     override fun toString(): String
     {
@@ -11,7 +11,14 @@ class Algorithm constructor(val name: String, val type: Symbol.Type, val paramet
         val sb = StringBuilder()
         sb.append("ԱԼԳ ${type.text} $name(")
         parameters.forEach { sb.append("${it.type.text} ${it.name} ") }
-        sb.append(")")
+        sb.append(")\n")
+        sb.append("ՍԿԻԶԲ\n")
+        for(s in body) {
+            sb.append("  ")
+            sb.append(s)
+            sb.append("\n")
+        }
+        sb.append("ՎԵՐՋ")
         return sb.toString()
     }
 }

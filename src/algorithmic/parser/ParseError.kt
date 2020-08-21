@@ -1,3 +1,6 @@
 package algorithmic.parser
 
-data class ParseError constructor(val msg: String) : Exception(msg)
+class ParseError constructor(msg: String, private val line: Int) : Exception(msg) {
+    override fun toString(): String =
+        "ՍԽԱԼ [$line]։ $message"
+}

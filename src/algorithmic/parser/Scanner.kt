@@ -26,7 +26,7 @@ class Scanner constructor(filename: String) {
     // հերթական սիմվոլը
     private var ch: Char = read()
     // տողի համարը
-    private var line: Int = 1
+    var line: Int = 1
 
     //
     fun next(): Lexeme
