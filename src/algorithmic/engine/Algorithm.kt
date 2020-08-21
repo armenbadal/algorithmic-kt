@@ -3,7 +3,7 @@ package algorithmic.engine
 import java.lang.StringBuilder
 
 class Algorithm constructor(val name: String, val type: Symbol.Type, val parameters: List<Symbol>) {
-    val body = arrayListOf<Statement>()
+    val body = StatementList()
 
     override fun toString(): String
     {
