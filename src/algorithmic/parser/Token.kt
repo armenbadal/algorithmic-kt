@@ -21,6 +21,7 @@ enum class Token {
     ԱՎԱՐՏ,
     ՔԱՆԻ,
     ԴԵՌ,
+    ԱՐԴՅՈՒՆՔ,
 //    FOR,
 //    TO,
 //    STEP,

@@ -16,6 +16,7 @@ class Scanner constructor(filename: String) {
         "ԱՎԱՐՏ" to Token.ԱՎԱՐՏ,
         "ՔԱՆԻ" to Token.ՔԱՆԻ,
         "ԴԵՌ" to Token.ԴԵՌ,
+        "ԱՐԴՅՈՒՆՔ" to Token.ԱՐԴՅՈՒՆՔ,
         "ԹԻՎ" to Token.ԹԻՎ,
         "ՏԵՔՍՏ" to Token.ՏԵՔՍՏ
     )

@@ -1,5 +1,5 @@
 package algorithmic.engine
 
-class Program {
+class Program constructor(sourceFile: String) {
     val algorithms = mutableListOf<Algorithm>()
 }
