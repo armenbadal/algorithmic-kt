@@ -1,7 +1,11 @@
 package algorithmic.engine
 
 interface Statement
-typealias StatementList = ArrayList<Statement>
+
+// հրամանների շարք
+class Sequence : Statement {
+    val items = arrayListOf<Statement>()
+}
 
 // վերագրման կառուցվածքը
 class Assignment(val sym: Symbol, val value: Expression) : Statement {
@@ -9,12 +13,10 @@ class Assignment(val sym: Symbol, val value: Expression) : Statement {
 }
 
 // ճյուղավորման կառուցվածքը
-class Branching(val condition: Expression, val decision: StatementList) : Statement {
-}
+class Branching(val condition: Expression, val decision: Statement) : Statement {}
 
 // կրկնման կառուցվածքը
-class Repetition(val condition: Expression, val body: StatementList) {
-}
+class Repetition(val condition: Expression, val body: Statement) {}
 
 // արդյունքի կառուցվածքը
 class Result(val value: Expression) : Statement {

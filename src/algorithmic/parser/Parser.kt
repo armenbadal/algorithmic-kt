@@ -1,6 +1,7 @@
 package algorithmic.parser
 
 import algorithmic.engine.*
+import java.nio.file.Paths
 
 class Parser constructor(private val scanner: Scanner) {
     // look-a-head սիմվոլը
@@ -10,11 +11,12 @@ class Parser constructor(private val scanner: Scanner) {
     private val firstStat = arrayOf(Token.ԱՆՈՒՆ, Token.ԵԹԵ, Token.ՔԱՆԻ, Token.ԱՐԴՅՈՒՆՔ)
 
     // վերլուծվող ծրագիրը
-    private val program = Program("")
+    private val program = Program(Paths.get(scanner.filename).fileName.toString())
 
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
-
+    // սահմանված ալգորիթմներ
+    private val signatures = arrayListOf<Algorithm.Signature>()
 
     // վերլուծել ծրագիրը
     fun parse(): Program
@@ -30,7 +32,9 @@ class Parser constructor(private val scanner: Scanner) {
     {
         match(Token.ԱԼԳՈՐԻԹՄ)
         val rtype = type(true)
-        val name = match(Token.ԱՆՈՒՆ)
+        val nm = match(Token.ԱՆՈՒՆ)
+        val aname = Symbol(nm, rtype)
+
         // պարամետրերի ցուցակ
         val params = arrayListOf<Symbol>()
         if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) ) {
@@ -45,8 +49,9 @@ class Parser constructor(private val scanner: Scanner) {
         // ... ու ավելացնել ալգորիթմի պարամետրերը
         symbolTable.addAll(params)
 
-        // ստեղծել նոր ալգորիթմի օբյեկտը
-        val current = Algorithm(name, rtype, params)
+        // ստեղծել նոր ալգորիթմի նկարագրությունը
+        val sig = Algorithm.Signature(aname, params)
+        signatures.add(sig)
 
         // լոկալ անուններ
         if ( !see(Token.ՍԿԻԶԲ) ) {
@@ -58,9 +63,9 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ՍԿԻԶԲ)
         val seq = sequence()
         match(Token.ՎԵՐՋ)
-        current.body.addAll(seq)
 
-        println(current)
+        val alg = Algorithm(sig, seq)
+        program.add(alg)
     }
 
     // տիպի վերլուծություն
@@ -85,12 +90,12 @@ class Parser constructor(private val scanner: Scanner) {
 
         val symbols = arrayListOf<Symbol>()
         val nm0 = match(Token.ԱՆՈՒՆ)
-        symbols.add(Symbol(ty, nm0))
+        symbols.add(Symbol(nm0, ty))
         if( !single ) {
             while (see(Token.ՍՏՈՐԱԿԵՏ)) {
                 match(Token.ՍՏՈՐԱԿԵՏ)
                 val nm1 = match(Token.ԱՆՈՒՆ)
-                symbols.add(Symbol(ty, nm1))
+                symbols.add(Symbol(nm1, ty))
             }
         }
 
@@ -112,15 +117,15 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // հրամանների հաջորդականություն
-    private fun sequence(): List<Statement>
+    private fun sequence(): Sequence
     {
-        val seq = arrayListOf<Statement>()
+        val seq = Sequence()
 
         if( see(*firstStat) ) {
-            seq.add(statement())
+            seq.items.add(statement())
             while (see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)) {
                 pass()
-                seq.add(statement())
+                seq.items.add(statement())
             }
         }
 
@@ -259,6 +264,16 @@ class Parser constructor(private val scanner: Scanner) {
             Token.ԱՆՈՒՆ -> {
                 val name = pass()
                 Variable(lookup(name))
+            }
+            Token.SUB, Token.ADD -> {
+                val oper = asOperation(pass())
+                Unary(oper, factor())
+            }
+            Token.ՁԱԽ_ՓԱԿԱԳԻԾ -> {
+                pass()
+                val expr = expression()
+                match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+                expr
             }
             else -> {
                 throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.line)

@@ -18,3 +18,12 @@ fun asOperation(opn: String): Operation =
         "/" -> Operation.DIVISION
         else -> throw ParseError("Անծանոթ գործողություն «$opn»։", 0)
     }
+
+fun typeOf(op: Operation, left: Symbol.Type, right: Symbol.Type): Symbol.Type
+{
+    if( left == Symbol.Type.NUMBER && right == Symbol.Type.NUMBER ) {
+        return Symbol.Type.NUMBER
+    }
+
+    return Symbol.Type.VOID
+}
