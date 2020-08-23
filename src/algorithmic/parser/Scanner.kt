@@ -131,8 +131,10 @@ class Scanner constructor(val filename: String) {
             return Lexeme(Token.ՎԵՐՋԱԿԵՏ, ":", line)
         }
 
-        if( ch == '=' )
+        if( ch == '=' ) {
+            ch = read()
             return Lexeme(Token.EQ, "=", line)
+        }
 
         if( ch == '<' ) {
             ch = read()

@@ -9,6 +9,9 @@ class Parser constructor(private val scanner: Scanner) {
 
     // հրամանների FIRST բազմությունը
     private val firstStat = arrayOf(Token.ԱՆՈՒՆ, Token.ԵԹԵ, Token.ՔԱՆԻ, Token.ԱՐԴՅՈՒՆՔ)
+    // արտահայտությունների FIRST բազմությունը
+    private val firstExpr = arrayOf(Token.ԹՎԱՅԻՆ, Token.ՏԵՔՍՏԱՅԻՆ, Token.ԱՆՈՒՆ,
+            Token.ՁԱԽ_ՓԱԿԱԳԻԾ, Token.ADD, Token.SUB)
 
     // վերլուծվող ծրագիրը
     private val program = Program(Paths.get(scanner.filename).fileName.toString())
@@ -16,7 +19,16 @@ class Parser constructor(private val scanner: Scanner) {
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
     // սահմանված ալգորիթմներ
-    private val signatures = arrayListOf<Algorithm.Signature>()
+    private val signatures = arrayListOf<Signature>()
+
+    init {
+        signatures.add(Signature(Symbol("ֆ", Symbol.Type.VOID),
+                arrayListOf(Symbol("ա", Symbol.Type.TEXT),
+                        Symbol("բ", Symbol.Type.NUMBER),
+                        Symbol("գ", Symbol.Type.TEXT))
+            ))
+    }
+
 
     // վերլուծել ծրագիրը
     fun parse(): Program
@@ -50,7 +62,7 @@ class Parser constructor(private val scanner: Scanner) {
         symbolTable.addAll(params)
 
         // ստեղծել նոր ալգորիթմի նկարագրությունը
-        val sig = Algorithm.Signature(aname, params)
+        val sig = Signature(aname, params)
         signatures.add(sig)
 
         // լոկալ անուններ
@@ -136,10 +148,10 @@ class Parser constructor(private val scanner: Scanner) {
     private fun statement(): Statement
     {
         if( see(Token.ԱՆՈՒՆ) )
-            return assignment()
+            return assignmentOrCall()
 
         if( see(Token.ԵԹԵ) )
-            return branching()
+            return branching(true)
 
         if( see(Token.ՔԱՆԻ) )
             return repetition()
@@ -150,41 +162,78 @@ class Parser constructor(private val scanner: Scanner) {
         throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.line)
     }
 
-    // վերագրում
-    private fun assignment(): Assignment
+    // վերագրում կամ ալգորիթմի կիրառում
+    private fun assignmentOrCall(): Statement
     {
         val name = match(Token.ԱՆՈՒՆ)
-        val sym = lookup(name)
+
+        if( see(Token.ՎԵՐԱԳՐԵԼ) )
+            return assignment(name)
+
+        if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
+            return algorithmCall(name)
+
+        throw ParseError("Սպասվում էր «:=» կամ «(», բայց հանդիպել է «${lookahead.value}»", scanner.line)
+    }
+
+    // վերագրում
+    private fun assignment(name: String): Assignment
+    {
         match(Token.ՎԵՐԱԳՐԵԼ)
+        val sym = lookup(name)
         val value = expression()
         return Assignment(sym, value)
     }
 
+    // ալգորիթմի կիրառում
+    private fun algorithmCall(name: String): Call
+    {
+        match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
+        val arguments = expressionList()
+        match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+        val alg = signatures.find { it.name.name == name }
+                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.line)
+
+        return Call(arguments)
+    }
+
+    // արտահայտությունների ցուցակ
+    private fun expressionList(): ArrayList<Expression>
+    {
+        val exprs = arrayListOf<Expression>()
+        if( see(*firstExpr) ) {
+            exprs.add(expression())
+            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
+                pass()
+                exprs.add(expression())
+            }
+        }
+        return exprs
+    }
+
     // ճյուղավորում
-    private fun branching(): Branching
+    private fun branching(closing: Boolean): Branching
     {
         match(Token.ԵԹԵ)
-        val cond0 = expression()
+        val cond = expression()
         match(Token.ԱՊԱ)
-        val dec0 = sequence()
-        val branching = Branching(cond0, dec0)
-        var p = branching
-        while( see(Token.ԻՍԿ) ) {
-            match(Token.ԻՍԿ)
-            match(Token.ԵԹԵ)
-            val cond1 = expression()
-            match(Token.ԱՊԱ)
-            val dec1 = sequence()
-            p.alternative = Branching(cond1, dec1)
-            p = p.alternative as Branching
+        val deci = sequence()
+        val alte = when {
+            see(Token.ԻՍԿ) -> {
+                pass()
+                Branching(cond, deci, branching(false))
+            }
+            see(Token.ԱՅԼԱՊԵՍ) -> {
+                pass()
+                Branching(cond, deci, sequence())
+            }
+            else -> {
+                Sequence()
+            }
         }
-        if( see(Token.ԱՅԼԱՊԵՍ) ) {
-            match(Token.ԱՅԼԱՊԵՍ)
-            p.alternative = sequence()
-        }
-        match(Token.ԱՎԱՐՏ)
-
-        return branching
+        if( closing )
+            match(Token.ԱՎԱՐՏ)
+        return Branching(cond, deci, alte)
     }
 
     // կրկնություն

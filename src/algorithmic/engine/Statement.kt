@@ -13,8 +13,7 @@ class Assignment(val sym: Symbol, val value: Expression) : Statement {
 }
 
 // ճյուղավորման կառուցվածքը
-class Branching(val condition: Expression, val decision: Statement) : Statement {
-    var alternative: Statement? = null
+class Branching(val condition: Expression, val decision: Statement, var alternative: Statement) : Statement {
 }
 
 // կրկնման կառուցվածքը
@@ -25,3 +24,6 @@ class Result(val value: Expression) : Statement {
     override fun toString(): String =
         String.format("ԱՐԴՅՈՒՆՔ %s", value)
 }
+
+// ալգորիթմի կիրառում
+class Call(val arguments: ArrayList<Expression>) : Statement {}

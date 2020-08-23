@@ -2,8 +2,26 @@ package algorithmic.engine
 
 import java.lang.StringBuilder
 
+class Signature(val name: Symbol, val parameters: ArrayList<Symbol>) {
+    fun isApplicable(args: ArrayList<Expression>): Boolean
+    {
+        if( parameters.size != args.size)
+            return false
+
+        for( i in 0..parameters.size ) {
+            if( parameters[i].type != args[i].type() )
+                return false
+        }
+        return true
+    }
+
+    fun isApplicable(ret: Symbol, args: ArrayList<Expression>): Boolean
+    {
+        return name.type == ret.type && isApplicable(args)
+    }
+}
+
 class Algorithm(val signature: Signature, val body: Statement) {
-    data class Signature(val name: Symbol, val parameters: ArrayList<Symbol>)
 
     override fun toString(): String
     {

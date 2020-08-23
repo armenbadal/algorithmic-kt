@@ -7,7 +7,7 @@ import algorithmic.parser.Scanner
 fun main()
 {
     try {
-        val scan = Scanner("C:\\Projects\\algorithmic-kt\\cases\\ex1.alg")
+        val scan = Scanner("C:\\Projects\\algorithmic-kt\\cases\\ex2.alg")
         val pars = Parser(scan)
         val prog = pars.parse()
         println(prog.name)
