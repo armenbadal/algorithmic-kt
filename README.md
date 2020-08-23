@@ -4,10 +4,11 @@ __Քերականություն__
 
 ```
 Program = { Algorithm }.
-Algorithm = 'ԱԼԳ' ԱՆՈՒՆ [Parameters]
+Algorithm = 'ԱԼԳ' [Type] ԱՆՈՒՆ [Parameters]
             DeclarationList
             'ՍԿԻԶԲ' { Statement } 'ՎԵՐՋ'.
-Parameters = '(' DeclarationList ')'.
+Parameters = '(' Type ԱՆՈՒՆ {',' Type ԱՆՈՒՆ} ')'.
 DeclarationList = Declaration {';' Declaration}.
-Declaration = Type ԱՆՈՒՆ {',' ԱՆՈՒՆ}. 
+Declaration = Type ԱՆՈՒՆ {',' ԱՆՈՒՆ}.
+Type = 'ԹԻՎ' | 'ՏԵՔՍՏ'. 
 ```

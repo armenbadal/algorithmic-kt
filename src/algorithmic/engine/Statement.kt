@@ -13,10 +13,12 @@ class Assignment(val sym: Symbol, val value: Expression) : Statement {
 }
 
 // ճյուղավորման կառուցվածքը
-class Branching(val condition: Expression, val decision: Statement) : Statement {}
+class Branching(val condition: Expression, val decision: Statement) : Statement {
+    var alternative: Statement? = null
+}
 
 // կրկնման կառուցվածքը
-class Repetition(val condition: Expression, val body: Statement) {}
+class Repetition(val condition: Expression, val body: Statement) : Statement {}
 
 // արդյունքի կառուցվածքը
 class Result(val value: Expression) : Statement {

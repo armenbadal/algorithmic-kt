@@ -92,7 +92,7 @@ class Parser constructor(private val scanner: Scanner) {
         val nm0 = match(Token.ԱՆՈՒՆ)
         symbols.add(Symbol(nm0, ty))
         if( !single ) {
-            while (see(Token.ՍՏՈՐԱԿԵՏ)) {
+            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
                 match(Token.ՍՏՈՐԱԿԵՏ)
                 val nm1 = match(Token.ԱՆՈՒՆ)
                 symbols.add(Symbol(nm1, ty))
@@ -123,7 +123,7 @@ class Parser constructor(private val scanner: Scanner) {
 
         if( see(*firstStat) ) {
             seq.items.add(statement())
-            while (see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)) {
+            while( see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ) ) {
                 pass()
                 seq.items.add(statement())
             }
@@ -138,11 +138,11 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(Token.ԱՆՈՒՆ) )
             return assignment()
 
-        //if( see(Token.ԵԹԵ) )
-        //    return branching()
+        if( see(Token.ԵԹԵ) )
+            return branching()
 
-        //if( see(Token.ՔԱՆԻ) )
-        //    return repetition()
+        if( see(Token.ՔԱՆԻ) )
+            return repetition()
 
         if( see(Token.ԱՐԴՅՈՒՆՔ) )
             return result()
@@ -161,35 +161,42 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // ճյուղավորում
-    private fun branching()
+    private fun branching(): Branching
     {
         match(Token.ԵԹԵ)
-        expression()
+        val cond0 = expression()
         match(Token.ԱՊԱ)
-        sequence()
+        val dec0 = sequence()
+        val branching = Branching(cond0, dec0)
+        var p = branching
         while( see(Token.ԻՍԿ) ) {
             match(Token.ԻՍԿ)
             match(Token.ԵԹԵ)
-            expression()
+            val cond1 = expression()
             match(Token.ԱՊԱ)
-            sequence()
+            val dec1 = sequence()
+            p.alternative = Branching(cond1, dec1)
+            p = p.alternative as Branching
         }
         if( see(Token.ԱՅԼԱՊԵՍ) ) {
             match(Token.ԱՅԼԱՊԵՍ)
-            sequence()
+            p.alternative = sequence()
         }
         match(Token.ԱՎԱՐՏ)
+
+        return branching
     }
 
     // կրկնություն
-    private fun repetition()
+    private fun repetition(): Repetition
     {
         match(Token.ՔԱՆԻ)
         match(Token.ԴԵՌ)
-        expression()
+        val cond = expression()
         match(Token.ԱՊԱ)
-        sequence()
+        val body = sequence()
         match(Token.ԱՎԱՐՏ)
+        return Repetition(cond, body)
     }
 
     // արդյունք

@@ -12,10 +12,16 @@ fun asType(name: String): Symbol.Type =
 
 fun asOperation(opn: String): Operation =
     when( opn ) {
-        "+" -> Operation.ADDITION
-        "-" -> Operation.SUBTRACTION
-        "*" -> Operation.MULTIPLICATION
-        "/" -> Operation.DIVISION
+        "+" -> Operation.ADD
+        "-" -> Operation.SUB
+        "*" -> Operation.MUL
+        "/" -> Operation.DIV
+        "=" -> Operation.EQ
+        "<>" -> Operation.NE
+        ">" -> Operation.GT
+        ">=" -> Operation.GE
+        "<" -> Operation.LT
+        "<=" -> Operation.LE
         else -> throw ParseError("Անծանոթ գործողություն «$opn»։", 0)
     }
 

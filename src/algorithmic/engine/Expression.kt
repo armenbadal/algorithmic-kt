@@ -27,10 +27,16 @@ class Variable(val sym: Symbol) : Expression {
 }
 
 enum class Operation(val text: String) {
-    ADDITION("+"),
-    SUBTRACTION("-"),
-    MULTIPLICATION("*"),
-    DIVISION("/");
+    ADD("+"),
+    SUB("-"),
+    MUL("*"),
+    DIV("/"),
+    EQ("="),
+    NE("<>"),
+    GT(">"),
+    GE(">="),
+    LT("<"),
+    LE("<=");
 
     override fun toString(): String = text
 }
