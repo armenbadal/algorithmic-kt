@@ -1,6 +1,6 @@
 package algorithmic.engine
 
-class Symbol(val name: String, val type: Type) {
+class Symbol(val id: String, val type: Type) {
     enum class Type(val text: String) {
         VOID(""),
         NUMBER("ԹԻՎ"),
@@ -8,5 +8,5 @@ class Symbol(val name: String, val type: Type) {
     }
 
     override fun toString(): String =
-        "Symbol(type=${type.text}, name=$name)"
+        "Symbol(type=${type.text}, name=$id)"
 }

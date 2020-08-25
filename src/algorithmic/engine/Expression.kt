@@ -23,7 +23,7 @@ class Text(val value: String) : Expression {
 class Variable(val sym: Symbol) : Expression {
     override fun type(): Symbol.Type = sym.type
 
-    override fun toString(): String = sym.name
+    override fun toString(): String = sym.id
 }
 
 enum class Operation(val text: String) {
@@ -55,4 +55,9 @@ class Binary(val operation: Operation, val left: Expression, val right: Expressi
 
     override fun toString(): String =
         String.format("(%s %s %s)", left, operation, right)
+}
+
+// ֆունկցիա ալգորիթմի կանչ
+class Apply(val callee: Signature, val arguments: List<Expression>) : Expression {
+    override fun type(): Symbol.Type = callee.resultType
 }

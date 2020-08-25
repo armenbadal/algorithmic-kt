@@ -9,7 +9,7 @@ class Sequence : Statement {
 
 // վերագրման կառուցվածքը
 class Assignment(val sym: Symbol, val value: Expression) : Statement {
-    override fun toString(): String = "${sym.name} := $value"
+    override fun toString(): String = "${sym.id} := $value"
 }
 
 // ճյուղավորման կառուցվածքը
@@ -26,4 +26,4 @@ class Result(val value: Expression) : Statement {
 }
 
 // ալգորիթմի կիրառում
-class Call(val arguments: ArrayList<Expression>) : Statement {}
+class Call(val callee: Signature, val arguments: List<Expression>) : Statement {}

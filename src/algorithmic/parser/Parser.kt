@@ -20,13 +20,11 @@ class Parser constructor(private val scanner: Scanner) {
     private val symbolTable = arrayListOf<Symbol>()
     // սահմանված ալգորիթմներ
     private val signatures = arrayListOf<Signature>()
+    private val unresolved = arrayListOf<Signature>()
 
     init {
-        signatures.add(Signature(Symbol("ֆ", Symbol.Type.VOID),
-                arrayListOf(Symbol("ա", Symbol.Type.TEXT),
-                        Symbol("բ", Symbol.Type.NUMBER),
-                        Symbol("գ", Symbol.Type.TEXT))
-            ))
+        signatures.add(Signature("ֆ", Symbol.Type.VOID,
+                arrayListOf(Symbol.Type.TEXT, Symbol.Type.NUMBER, Symbol.Type.TEXT)))
     }
 
 
@@ -43,9 +41,8 @@ class Parser constructor(private val scanner: Scanner) {
     private fun algorithm()
     {
         match(Token.ԱԼԳՈՐԻԹՄ)
-        val rtype = type(true)
-        val nm = match(Token.ԱՆՈՒՆ)
-        val aname = Symbol(nm, rtype)
+        val resultType = type(true)
+        val name = match(Token.ԱՆՈՒՆ)
 
         // պարամետրերի ցուցակ
         val params = arrayListOf<Symbol>()
@@ -62,7 +59,7 @@ class Parser constructor(private val scanner: Scanner) {
         symbolTable.addAll(params)
 
         // ստեղծել նոր ալգորիթմի նկարագրությունը
-        val sig = Signature(aname, params)
+        val sig = Signature(name, resultType, params.map { it.type })
         signatures.add(sig)
 
         // լոկալ անուններ
@@ -191,14 +188,14 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
         val arguments = expressionList()
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
-        val alg = signatures.find { it.name.name == name }
+        val alg = signatures.find { it.name == name }
                 ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.line)
 
-        return Call(arguments)
+        return Call(alg, arguments)
     }
 
     // արտահայտությունների ցուցակ
-    private fun expressionList(): ArrayList<Expression>
+    private fun expressionList(): List<Expression>
     {
         val exprs = arrayListOf<Expression>()
         if( see(*firstExpr) ) {
@@ -336,6 +333,18 @@ class Parser constructor(private val scanner: Scanner) {
             }
         }
 
+    // ֆունկցիա ալգորիթմի կանչ
+    private fun apply(name: String): Expression
+    {
+        match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
+        val args = expressionList()
+        match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+        val func = signatures.find { it.name == name }
+                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.line)
+
+        return Apply(func, args)
+    }
+
     private fun see(exp: Token): Boolean =
         lookahead.token == exp
 
@@ -362,9 +371,15 @@ class Parser constructor(private val scanner: Scanner) {
     private fun lookup(name: String): Symbol
     {
         for( sym in symbolTable )
-            if( sym.name == name )
+            if( sym.id == name )
                 return sym
 
         throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.line)
     }
+
+//    // որոնել տրված անունով ալգորիթմը
+//    private fun lookupAlgorithm(sig: Signature): Signature
+//    {
+//
+//    }
 }

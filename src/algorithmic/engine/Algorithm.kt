@@ -1,25 +1,41 @@
 package algorithmic.engine
 
-import java.lang.StringBuilder
-
-class Signature(val name: Symbol, val parameters: ArrayList<Symbol>) {
-    fun isApplicable(args: ArrayList<Expression>): Boolean
+class Signature(val name: String, val resultType: Symbol.Type, val parametersTypes: List<Symbol.Type>) {
+    fun isApplicable(args: List<Expression>): Boolean
     {
-        if( parameters.size != args.size)
+        if( parametersTypes.size != args.size)
             return false
 
-        for( i in 0..parameters.size ) {
-            if( parameters[i].type != args[i].type() )
+        for( i in 0..parametersTypes.size ) {
+            if( parametersTypes[i] != args[i].type() )
                 return false
         }
         return true
     }
 
-    fun isApplicable(ret: Symbol, args: ArrayList<Expression>): Boolean
+    fun isApplicable(ret: Symbol, args: List<Expression>): Boolean
     {
-        return name.type == ret.type && isApplicable(args)
+        return resultType == ret.type && isApplicable(args)
+    }
+
+    override fun equals(other: Any?): Boolean
+    {
+        val sec = other as Signature
+
+        if( resultType != sec.resultType )
+            return false
+
+        if( parametersTypes.size != sec.parametersTypes.size )
+            return false
+
+        for( i in 0..parametersTypes.size )
+            if( parametersTypes[i] != sec.parametersTypes[i] )
+                return false
+
+        return true
     }
 }
+
 
 class Algorithm(val signature: Signature, val body: Statement) {
 
