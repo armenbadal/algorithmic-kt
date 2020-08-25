@@ -70,10 +70,11 @@ class Parser constructor(private val scanner: Scanner) {
 
         // մարմին
         match(Token.ՍԿԻԶԲ)
-        val seq = sequence()
+        val body = sequence()
         match(Token.ՎԵՐՋ)
 
-        val alg = Algorithm(sig, seq)
+        val alg = Algorithm(name, resultType, params, body)
+        alg.locals.addAll(symbolTable.filter { !params.contains(it) })
         program.add(alg)
     }
 

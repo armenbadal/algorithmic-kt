@@ -5,7 +5,7 @@ import org.apache.bcel.Const
 import org.apache.bcel.generic.ClassGen
 import org.apache.bcel.generic.InstructionFactory
 
-class Compiler constructor(private val program: Program) {
+class Bytecode constructor(private val program: Program) {
 
     private val classGenerator: ClassGen = createClassGenerator()
     private val constantPool = classGenerator.constantPool

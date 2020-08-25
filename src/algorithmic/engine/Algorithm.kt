@@ -37,7 +37,8 @@ class Signature(val name: String, val resultType: Symbol.Type, val parametersTyp
 }
 
 
-class Algorithm(val signature: Signature, val body: Statement) {
+class Algorithm(val name: String, val type: Symbol.Type, val parameters: List<Symbol>, val body: Statement) {
+    var locals = arrayListOf<Symbol>()
 
     override fun toString(): String
     {
