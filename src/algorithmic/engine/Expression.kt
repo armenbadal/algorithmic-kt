@@ -7,7 +7,7 @@ sealed class Expression {
 
 // թվային հաստատուն
 class Numeric(val value: Double) : Expression() {
-    override fun type(): Symbol.Type = Symbol.Type.NUMBER
+    override fun type(): Symbol.Type = Symbol.Type.REAL
 
     override fun toString(): String = value.toString()
 }
@@ -36,7 +36,10 @@ enum class Operation(val text: String) {
     GT(">"),
     GE(">="),
     LT("<"),
-    LE("<=");
+    LE("<="),
+    AND("ԵՎ"),
+    OR("ԿԱՄ"),
+    NOT("ՈՉ");
 
     override fun toString(): String = text
 }

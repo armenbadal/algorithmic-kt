@@ -4,11 +4,20 @@ __Քերականություն__
 
 ```
 Program = { Algorithm }.
-Algorithm = 'ԱԼԳ' [Type] ԱՆՈՒՆ [Parameters]
+Algorithm = 'ԱԼԳՈՐԻԹՄ' [Type] ԱՆՈՒՆ [Parameters]
             DeclarationList
-            'ՍԿԻԶԲ' { Statement } 'ՎԵՐՋ'.
+            'ՍԿԻԶԲ' [StatementList] 'ՎԵՐՋ'.
 Parameters = '(' Type ԱՆՈՒՆ {',' Type ԱՆՈՒՆ} ')'.
 DeclarationList = Declaration {';' Declaration}.
 Declaration = Type ԱՆՈՒՆ {',' ԱՆՈՒՆ}.
-Type = 'ԹԻՎ' | 'ՏԵՔՍՏ'. 
+Type = 'ԻՐԱԿԱՆ' | 'ՏԵՔՍՏ'. 
+StatementList = Statement {';' Statement}.
+Statement = ԱՆՈՒՆ ':=' Expression
+    | 'ԵԹԵ' Expression 'ԱՊԱ' StatementList
+      {'ԻՍԿ' 'ԵԹԵ' Expression 'ԱՊԱ' StatementList}
+      ['ԱՅԼԱՊԵՍ' StatementList] 'ԱՎԱՐՏ'
+    | 'ՔԱՆԻ' 'ԴԵՌ' Expression 'ԱՊԱ' StatementList 'ԱՎԱՐՏ'
+    | 'ԱՐԴՅՈՒՆՔ' Expression
+    | ԱՆՈՒՆ '(' [ExpressionList] ')'.
+ExpressionList = Expression {',' Expression}.
 ```

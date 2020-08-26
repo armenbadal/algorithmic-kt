@@ -1,8 +1,11 @@
 package algorithmic.engine
 
 class Signature(val name: String, val resultType: Symbol.Type, val parametersTypes: List<Symbol.Type>) {
-    fun isApplicable(args: List<Expression>): Boolean
+    fun isApplicable(nm: String, args: List<Expression>): Boolean
     {
+        if( name != nm )
+            return false
+
         if( parametersTypes.size != args.size)
             return false
 
@@ -10,12 +13,13 @@ class Signature(val name: String, val resultType: Symbol.Type, val parametersTyp
             if( parametersTypes[i] != args[i].type() )
                 return false
         }
+
         return true
     }
 
-    fun isApplicable(ret: Symbol, args: List<Expression>): Boolean
+    fun isApplicable(nm: String, ret: Symbol.Type, args: List<Expression>): Boolean
     {
-        return resultType == ret.type && isApplicable(args)
+        return resultType == ret && isApplicable(nm, args)
     }
 
     override fun equals(other: Any?): Boolean
@@ -38,7 +42,7 @@ class Signature(val name: String, val resultType: Symbol.Type, val parametersTyp
 
 
 class Algorithm(val name: String, val type: Symbol.Type, val parameters: List<Symbol>, val body: Statement) {
-    var locals = arrayListOf<Symbol>()
+    val locals = arrayListOf<Symbol>()
 
     override fun toString(): String
     {

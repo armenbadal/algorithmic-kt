@@ -3,7 +3,7 @@ package algorithmic.engine
 class Symbol(val id: String, val type: Type) {
     enum class Type(val text: String) {
         VOID(""),
-        NUMBER("ԹԻՎ"),
+        REAL("ԹԻՎ"),
         TEXT("ՏԵՔՍՏ")
     }
 

@@ -19,20 +19,19 @@ class Parser constructor(private val scanner: Scanner) {
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
     // սահմանված ալգորիթմներ
-    private val signatures = arrayListOf<Signature>()
+    private val signatures = builtIns()
     private val unresolved = arrayListOf<Signature>()
-
-    init {
-        signatures.add(Signature("ֆ", Symbol.Type.VOID,
-                arrayListOf(Symbol.Type.TEXT, Symbol.Type.NUMBER, Symbol.Type.TEXT)))
-    }
-
 
     // վերլուծել ծրագիրը
     fun parse(): Program
     {
         while( see(Token.ԱԼԳՈՐԻԹՄ) )
             algorithm()
+
+        for( us in unresolved ) {
+            // TODO: որոնել signatures-ի մեջ; եթե գտնված չէ,
+            //       արտածել հաղորդագրություն սխալի մասին
+        }
 
         return program
     }
@@ -81,7 +80,7 @@ class Parser constructor(private val scanner: Scanner) {
     // տիպի վերլուծություն
     private fun type(opt: Boolean): Symbol.Type
     {
-        if( see(Token.ԹԻՎ) )
+        if( see(Token.ԻՐԱԿԱՆ) )
             return asType(pass())
 
         if( see(Token.ՏԵՔՍՏ) )
@@ -90,7 +89,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( opt )
             return Symbol.Type.VOID
 
-        throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.line)
+        throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
 
     // վերլուծել մեկ հայտարարություն
@@ -157,7 +156,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(Token.ԱՐԴՅՈՒՆՔ) )
             return result()
 
-        throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.line)
+        throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
 
     // վերագրում կամ ալգորիթմի կիրառում
@@ -171,7 +170,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
             return algorithmCall(name)
 
-        throw ParseError("Սպասվում էր «:=» կամ «(», բայց հանդիպել է «${lookahead.value}»", scanner.line)
+        throw ParseError("Սպասվում էր «:=» կամ «(», բայց հանդիպել է «${lookahead.value}»", scanner.getLine())
     }
 
     // վերագրում
@@ -189,8 +188,9 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
         val arguments = expressionList()
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+
         val alg = signatures.find { it.name == name }
-                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.line)
+                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.getLine())
 
         return Call(alg, arguments)
     }
@@ -255,9 +255,31 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // արտահայտություն
-    private fun expression(): Expression
+    private fun expression(): Expression =
+        disjunction()
+
+    // դիզյունկցիա
+    private fun disjunction(): Expression
     {
-        return equality()
+        var res = conjunction()
+        while( see(Token.ԿԱՄ) ) {
+            pass()
+            val oper = asOperation("ԿԱՄ")
+            res = Binary(oper, res, conjunction())
+        }
+        return res
+    }
+
+    // կոնյունկցիա
+    private fun conjunction(): Expression
+    {
+        var res = equality()
+        while( see(Token.ԵՎ) ) {
+            pass()
+            val oper = asOperation("ԵՎ")
+            res = Binary(oper, res, equality())
+        }
+        return res
     }
 
     // հավասարություն
@@ -317,7 +339,10 @@ class Parser constructor(private val scanner: Scanner) {
             }
             Token.ԱՆՈՒՆ -> {
                 val name = pass()
-                Variable(lookup(name))
+                if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
+                    apply(name)
+                else
+                    Variable(lookup(name))
             }
             Token.SUB, Token.ADD -> {
                 val oper = asOperation(pass())
@@ -330,7 +355,7 @@ class Parser constructor(private val scanner: Scanner) {
                 expr
             }
             else -> {
-                throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.line)
+                throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.getLine())
             }
         }
 
@@ -341,7 +366,7 @@ class Parser constructor(private val scanner: Scanner) {
         val args = expressionList()
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
         val func = signatures.find { it.name == name }
-                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.line)
+                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.getLine())
 
         return Apply(func, args)
     }
@@ -365,7 +390,7 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(exp) )
             return pass()
 
-        throw ParseError("Սպասվում է $exp, բայց գրված է «${lookahead.value}»։", scanner.line)
+        throw ParseError("Սպասվում է $exp, բայց գրված է «${lookahead.value}»։", scanner.getLine())
     }
 
     // որոնել սիմվոլների աղյուսակում
@@ -375,12 +400,20 @@ class Parser constructor(private val scanner: Scanner) {
             if( sym.id == name )
                 return sym
 
-        throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.line)
+        throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
     }
 
 //    // որոնել տրված անունով ալգորիթմը
 //    private fun lookupAlgorithm(sig: Signature): Signature
 //    {
+//        // որոնել արդեն սահմանվածների ու ներդրվածների մեջ
+//        for( s in signatures )
+//            if( s == sig )
+//                return s
 //
+//        // եթե գտնված չէ, ավելացնել հատուկ ցուցակում՝
+//        // վերջում նորից ստուգելու համար
+//        unresolved.add(sig)
+//        return sig
 //    }
 }

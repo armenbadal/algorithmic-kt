@@ -27,8 +27,10 @@ class JavaScript(val program: Program) {
         when(stat) {
             is Sequence -> compile(stat)
             is Assignment -> compile(stat)
+            is Branching -> compile(stat)
+            is Repetition -> compile(stat)
             is Result -> compile(stat)
-            else -> throw CompileError("Չիրականացված թարգմանություն")
+            is Call -> compile(stat)
         }
 
     private fun compile(seq: Sequence): String
@@ -42,9 +44,34 @@ class JavaScript(val program: Program) {
         return "${asg.sym.id} = $se"
     }
 
+    private fun compile(bra: Branching): String
+    {
+        val sb = StringBuilder()
+        val cj = compile(bra.condition)
+        sb.append("if($cj)")
+        val dj = compile(bra.decision)
+        sb.append("\n{$dj}\n")
+        val aj = compile(bra.alternative)
+        sb.append("else\n{$aj}")
+        return sb.toString()
+    }
+
+    private fun compile(rep: Repetition): String
+    {
+        val cj = compile(rep.condition)
+        val bj = compile(rep.body)
+        return "while($cj)\n{$bj}"
+    }
+
     private fun compile(res: Result): String
     {
         return "return " + compile(res.value)
+    }
+
+    private fun compile(cl: Call): String
+    {
+        val args = cl.arguments.joinToString { compile(it) }
+        return "${cl.callee.name}($args)"
     }
 
     private fun compile(expr: Expression): String =
@@ -61,7 +88,12 @@ class JavaScript(val program: Program) {
     {
         val ls = compile(ex.left)
         val rs = compile(ex.right)
-        return "($ls ${ex.operation.text} $rs)"
+        val op = when(ex.operation.text) {
+            "=" -> "=="
+            "<>" -> "!="
+            else -> ex.operation.text
+        }
+        return "($ls $op $rs)"
     }
 
     private fun compile(ex: Unary): String
@@ -87,7 +119,7 @@ class JavaScript(val program: Program) {
 
     private fun compile(sym: Symbol): String =
         "let ${sym.id} = " + when(sym.type) {
-            Symbol.Type.NUMBER -> "0.0"
+            Symbol.Type.REAL -> "0.0"
             Symbol.Type.TEXT -> "''"
             Symbol.Type.VOID -> ""
         }

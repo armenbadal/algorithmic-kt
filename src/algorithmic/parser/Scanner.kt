@@ -6,7 +6,7 @@ import java.nio.file.Paths
 
 class Scanner constructor(val filename: String) {
     private val keywords = mapOf(
-        "ԱԼԳ" to Token.ԱԼԳՈՐԻԹՄ,
+        "ԱԼԳՈՐԻԹՄ" to Token.ԱԼԳՈՐԻԹՄ,
         "ՍԿԻԶԲ" to Token.ՍԿԻԶԲ,
         "ՎԵՐՋ" to Token.ՎԵՐՋ,
         "ԵԹԵ" to Token.ԵԹԵ,
@@ -20,8 +20,9 @@ class Scanner constructor(val filename: String) {
         "ԵՎ" to Token.ԵՎ,
         "ԿԱՄ" to Token.ԿԱՄ,
         "ՈՉ" to Token.ՈՉ,
-        "ԹԻՎ" to Token.ԹԻՎ,
-        "ՏԵՔՍՏ" to Token.ՏԵՔՍՏ
+        "ԻՐԱԿԱՆ" to Token.ԻՐԱԿԱՆ,
+        "ՏԵՔՍՏ" to Token.ՏԵՔՍՏ,
+        "ԱՂՅՈՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ
     )
 
     // ներմուծման հոսք
@@ -29,7 +30,7 @@ class Scanner constructor(val filename: String) {
     // հերթական սիմվոլը
     private var ch: Char = read()
     // տողի համարը
-    var line: Int = 1
+    private var line: Int = 1
 
     //
     fun next(): Lexeme
@@ -54,6 +55,9 @@ class Scanner constructor(val filename: String) {
 
         return metasymbol()
     }
+
+    // տողի համարը
+    fun getLine(): Int = line
 
     // անտեսել բացատները
     private fun whitespaces()
