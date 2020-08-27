@@ -1,26 +1,26 @@
 package algorithmic.engine
 
-class Signature(val name: String, val resultType: Symbol.Type, val parametersTypes: List<Symbol.Type>) {
-    fun isApplicable(nm: String, args: List<Expression>): Boolean
-    {
-        if( name != nm )
-            return false
-
-        if( parametersTypes.size != args.size)
-            return false
-
-        for( i in 0..parametersTypes.size ) {
-            if( parametersTypes[i] != args[i].type() )
-                return false
-        }
-
-        return true
-    }
-
-    fun isApplicable(nm: String, ret: Symbol.Type, args: List<Expression>): Boolean
-    {
-        return resultType == ret && isApplicable(nm, args)
-    }
+class Signature(val name: String, val resultType: Type, val parametersTypes: List<Type>) {
+//    fun isApplicable(nm: String, args: List<Expression>): Boolean
+//    {
+//        if( name != nm )
+//            return false
+//
+//        if( parametersTypes.size != args.size)
+//            return false
+//
+//        for( i in 0..parametersTypes.size ) {
+//            if( parametersTypes[i] != args[i].type() )
+//                return false
+//        }
+//
+//        return true
+//    }
+//
+//    fun isApplicable(nm: String, ret: Symbol.Type, args: List<Expression>): Boolean
+//    {
+//        return resultType == ret && isApplicable(nm, args)
+//    }
 
     override fun equals(other: Any?): Boolean
     {
@@ -41,7 +41,7 @@ class Signature(val name: String, val resultType: Symbol.Type, val parametersTyp
 }
 
 
-class Algorithm(val name: String, val type: Symbol.Type, val parameters: List<Symbol>, val body: Statement) {
+class Algorithm(val name: String, val returnType: Type, val parameters: List<Symbol>, val body: Statement) {
     val locals = arrayListOf<Symbol>()
 
     override fun toString(): String

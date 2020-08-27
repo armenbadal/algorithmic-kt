@@ -2,26 +2,26 @@ package algorithmic.engine
 
 // արտահայտությունների բազային դաս
 sealed class Expression {
-    abstract fun type(): Symbol.Type
+    abstract fun type(): Type
 }
 
 // թվային հաստատուն
 class Numeric(val value: Double) : Expression() {
-    override fun type(): Symbol.Type = Symbol.Type.REAL
+    override fun type(): Type = Type.REAL
 
     override fun toString(): String = value.toString()
 }
 
 // տեքստային հաստատուն
 class Text(val value: String) : Expression() {
-    override fun type(): Symbol.Type = Symbol.Type.TEXT
+    override fun type(): Type = Type.TEXT
 
     override fun toString(): String = value
 }
 
 // փոփոխական
 class Variable(val sym: Symbol) : Expression() {
-    override fun type(): Symbol.Type = sym.type
+    override fun type(): Type = sym.type
 
     override fun toString(): String = sym.id
 }
@@ -46,7 +46,7 @@ enum class Operation(val text: String) {
 
 // ունար գործողություն
 class Unary(val operation: Operation, val subexpr: Expression) : Expression() {
-    override fun type(): Symbol.Type = Symbol.Type.VOID
+    override fun type(): Type = Type.VOID
 
     override fun toString(): String =
         String.format("(%s %s)", operation, subexpr)
@@ -54,7 +54,7 @@ class Unary(val operation: Operation, val subexpr: Expression) : Expression() {
 
 // բինար գործողություն
 class Binary(val operation: Operation, val left: Expression, val right: Expression) : Expression() {
-    override fun type(): Symbol.Type = Symbol.Type.VOID
+    override fun type(): Type = Type.VOID
 
     override fun toString(): String =
         String.format("(%s %s %s)", left, operation, right)
@@ -62,5 +62,5 @@ class Binary(val operation: Operation, val left: Expression, val right: Expressi
 
 // ֆունկցիա ալգորիթմի կանչ
 class Apply(val callee: Signature, val arguments: List<Expression>) : Expression() {
-    override fun type(): Symbol.Type = callee.resultType
+    override fun type(): Type = callee.resultType
 }

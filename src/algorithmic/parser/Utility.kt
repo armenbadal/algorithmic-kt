@@ -2,11 +2,12 @@ package algorithmic.parser
 
 import algorithmic.engine.Operation
 import algorithmic.engine.Symbol
+import algorithmic.engine.Type
 
-fun asType(name: String): Symbol.Type =
+fun asType(name: String): Type =
      when( name ) {
-        "ԻՐԱԿԱՆ" -> Symbol.Type.REAL
-        "ՏԵՔՍՏ" -> Symbol.Type.TEXT
+        "ԻՐԱԿԱՆ" -> Type.REAL
+        "ՏԵՔՍՏ" -> Type.TEXT
         else -> throw ParseError("Անծանոթ տիպ «$name»։", 0)
     }
 
@@ -28,11 +29,10 @@ fun asOperation(opn: String): Operation =
         else -> throw ParseError("Անծանոթ գործողություն «$opn»։", 0)
     }
 
-fun typeOf(op: Operation, left: Symbol.Type, right: Symbol.Type): Symbol.Type
+fun typeOf(op: Operation, left: Type, right: Type): Type
 {
-    if( left == Symbol.Type.REAL && right == Symbol.Type.REAL ) {
-        return Symbol.Type.REAL
-    }
+    if( left == Type.REAL && right == Type.REAL )
+        return Type.REAL
 
-    return Symbol.Type.VOID
+    return Type.VOID
 }

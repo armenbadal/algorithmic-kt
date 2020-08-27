@@ -119,8 +119,8 @@ class JavaScript(val program: Program) {
 
     private fun compile(sym: Symbol): String =
         "let ${sym.id} = " + when(sym.type) {
-            Symbol.Type.REAL -> "0.0"
-            Symbol.Type.TEXT -> "''"
-            Symbol.Type.VOID -> ""
+            Type.REAL -> "0.0"
+            Type.TEXT -> "''"
+            Type.VOID -> ""
         }
 }

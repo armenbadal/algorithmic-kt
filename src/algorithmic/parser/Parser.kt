@@ -78,7 +78,7 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // տիպի վերլուծություն
-    private fun type(opt: Boolean): Symbol.Type
+    private fun type(opt: Boolean): Type
     {
         if( see(Token.ԻՐԱԿԱՆ) )
             return asType(pass())
@@ -87,7 +87,7 @@ class Parser constructor(private val scanner: Scanner) {
             return asType(pass())
 
         if( opt )
-            return Symbol.Type.VOID
+            return Type.VOID
 
         throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
