@@ -62,7 +62,7 @@ class Scanner constructor(val filename: String) {
     // անտեսել բացատները
     private fun whitespaces()
     {
-        while( ch.isWhitespace() ) {
+        while( ch.isWhitespace() || ch == '|' ) {
             if( ch == '\n' )
                 ++line
             ch = read()

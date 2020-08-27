@@ -8,8 +8,19 @@ import org.apache.bcel.generic.*
 typealias BCELType = org.apache.bcel.generic.Type;
 
 class ByteCode(private val program: Program) {
+//    private data class ProgramCodeContext(
+//        val classGenerator: ClassGen,
+//        val constantPoolGen: ConstantPoolGen,
+//        val instructionList: InstructionList
+//    )
+//    private data class MethodCodeContext(
+//        val methodGenerator: MethodGen,
+//        val instructionFactory: InstructionFactory
+//    )
+
     // սկզբնական ծրագրի ֆայլի անունը
-    private val fileName = program.name
+    private val fileName: String = program.name
+
     // ստեղծվելիք դասի անունը
     private val className = fileName.substring(0, fileName.lastIndexOf('.'))
 
@@ -19,7 +30,7 @@ class ByteCode(private val program: Program) {
     private lateinit var instructionList: InstructionList
 
     private lateinit var methodGenerator: MethodGen
-    private val nameIndieces = hashMapOf<String,Int>()
+    private val nameIndices = hashMapOf<String, Int>()
 
     fun compile(/* TODO: add parameter for output file */)
     {
@@ -44,25 +55,23 @@ class ByteCode(private val program: Program) {
         factory = InstructionFactory(classGenerator, constantPool)
 
         // վերցնել մեթոդի պարամետրերի ինդեքսները
-        nameIndieces.clear()
+        nameIndices.clear()
         for( vr in methodGenerator.localVariables )
-            nameIndieces[vr.name] = vr.index
+            nameIndices[vr.name] = vr.index
 
         // հայտարարել լոկալ փոփոխականները
         for( vr in alg.locals ) {
             val ty = bcelType(vr.type)
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
-            nameIndieces[vr.id] = lv.index
-            if( Type.REAL == vr.type ) {
+            nameIndices[vr.id] = lv.index
+            if( Type.REAL == vr.type )
                 instructionList.append(PUSH(constantPool, 0.0))
-                instructionList.append(DSTORE(lv.index))
-            }
-            else if( Type.TEXT == vr.type ) {
+            else if( Type.TEXT == vr.type )
                 instructionList.append(InstructionConst.ACONST_NULL)
-                instructionList.append(ASTORE(lv.index))
-            }
+            instructionList.append(InstructionFactory.createStore(ty, lv.index))
         }
 
+        // մեթոդի մարմինը
         code(alg.body)
 
         methodGenerator.setMaxStack()
@@ -90,7 +99,7 @@ class ByteCode(private val program: Program) {
     private fun code(asg: Assignment)
     {
         code(asg.value)
-        val ix = nameIndieces[asg.sym.id]!!
+        val ix = nameIndices[asg.sym.id]!!
         if( Type.REAL == asg.sym.type )
             instructionList.append(DSTORE(ix))
         else if( Type.TEXT == asg.sym.type )
@@ -100,7 +109,10 @@ class ByteCode(private val program: Program) {
     private fun code(rs: Result)
     {
         code(rs.value)
-        //instructionList.append(factory.createReturn)
+        if( rs.value.type == Type.REAL )
+            instructionList.append(InstructionConst.DRETURN)
+        else if( rs.value.type == Type.TEXT )
+            instructionList.append(InstructionConst.ARETURN)
     }
 
     private fun code(expr: Expression)
@@ -116,16 +128,40 @@ class ByteCode(private val program: Program) {
     }
 
     private fun code(bi: Binary)
-    {}
+    {
+        code(bi.left)
+        code(bi.right)
+        val inst = when( bi.operation ) {
+            Operation.ADD -> InstructionConst.DADD
+            Operation.SUB -> InstructionConst.DSUB
+            Operation.MUL -> InstructionConst.DMUL
+            Operation.DIV -> InstructionConst.DDIV
+            else -> InstructionConst.NOP
+        }
+        instructionList.append(inst)
+    }
 
     private fun code(un: Unary)
-    {}
+    {
+        code(un.right)
+        if( un.operation == Operation.SUB )
+            instructionList.append(InstructionConst.DNEG)
+    }
 
     private fun code(ap: Apply)
-    {}
+    {
+        ap.arguments.forEach { code(it) }
+        val aty = ap.callee.parametersTypes.map { bcelType(it) }
+        val inv = factory.createInvoke(className, ap.callee.name,
+                bcelType(ap.callee.resultType), aty.toTypedArray(),
+                Const.INVOKESTATIC)
+        instructionList.append(inv)
+    }
 
     private fun code(tx: Text)
-    {}
+    {
+        instructionList.append(PUSH(constantPool, tx.value))
+    }
 
     private fun code(nm: Numeric)
     {
@@ -134,10 +170,13 @@ class ByteCode(private val program: Program) {
 
     private fun code(vr: Variable)
     {
+        val ix = nameIndices[vr.sym.id]!!
+        var ld = InstructionConst.NOP
         if( vr.sym.type == Type.REAL )
-            instructionList.append(DLOAD(nameIndieces[vr.sym.id]!!))
+            ld = InstructionFactory.createLoad(BCELType.DOUBLE, ix)
         else if( vr.sym.type == Type.TEXT )
-            instructionList.append(ALOAD(nameIndieces[vr.sym.id]!!))
+            ld = InstructionFactory.createLoad(BCELType.STRING, ix)
+        instructionList.append(ld)
     }
 
     private fun bcelType(type: Type): BCELType =

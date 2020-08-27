@@ -98,7 +98,7 @@ class JavaScript(val program: Program) {
 
     private fun compile(ex: Unary): String
     {
-        val vs = compile(ex.subexpr)
+        val vs = compile(ex.right)
         return "(${ex.operation.text} $vs)"
     }
 

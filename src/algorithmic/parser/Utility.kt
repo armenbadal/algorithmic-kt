@@ -29,10 +29,18 @@ fun asOperation(opn: String): Operation =
         else -> throw ParseError("Անծանոթ գործողություն «$opn»։", 0)
     }
 
+fun typeOf(op: Operation, left: Type): Type
+{
+    if( (op == Operation.SUB || op == Operation.ADD) && left == Type.REAL )
+        return Type.REAL
+
+    throw TypeError("Տիպերի անհամապատասխանություն", 0)
+}
+
 fun typeOf(op: Operation, left: Type, right: Type): Type
 {
     if( left == Type.REAL && right == Type.REAL )
         return Type.REAL
 
-    return Type.VOID
+    throw TypeError("Տիպերի անհամապատասխանություն", 0)
 }

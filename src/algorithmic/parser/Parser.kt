@@ -43,29 +43,26 @@ class Parser constructor(private val scanner: Scanner) {
         val resultType = type(true)
         val name = match(Token.ԱՆՈՒՆ)
 
+        // մաքրել սիմվոլների աղյուսակը
+        symbolTable.clear()
+
         // պարամետրերի ցուցակ
         val params = arrayListOf<Symbol>()
         if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) ) {
-            match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
+            pass()
             if ( !see(Token.ԱՋ_ՓԱԿԱԳԻԾ) )
                 params.addAll(declarationList(true, Token.ՍՏՈՐԱԿԵՏ))
             match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
         }
-
-        // մաքրել սիմվոլների աղյուսակը...
-        symbolTable.clear()
-        // ... ու ավելացնել ալգորիթմի պարամետրերը
-        symbolTable.addAll(params)
 
         // ստեղծել նոր ալգորիթմի նկարագրությունը
         val sig = Signature(name, resultType, params.map { it.type })
         signatures.add(sig)
 
         // լոկալ անուններ
-        if ( !see(Token.ՍԿԻԶԲ) ) {
-            val locals = declarationList(false, Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)
-            symbolTable.addAll(locals)
-        }
+        val locals = arrayListOf<Symbol>()
+        if ( !see(Token.ՍԿԻԶԲ) )
+            locals.addAll(declarationList(false, Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ))
 
         // մարմին
         match(Token.ՍԿԻԶԲ)
@@ -92,25 +89,6 @@ class Parser constructor(private val scanner: Scanner) {
         throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
 
-    // վերլուծել մեկ հայտարարություն
-    private fun declaration(single: Boolean): List<Symbol>
-    {
-        val ty = type(false)
-
-        val symbols = arrayListOf<Symbol>()
-        val nm0 = match(Token.ԱՆՈՒՆ)
-        symbols.add(Symbol(nm0, ty))
-        if( !single ) {
-            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
-                match(Token.ՍՏՈՐԱԿԵՏ)
-                val nm1 = match(Token.ԱՆՈՒՆ)
-                symbols.add(Symbol(nm1, ty))
-            }
-        }
-
-        return symbols
-    }
-
     // հայտարարությունների շարք
     private fun declarationList(single: Boolean, sep: Token): List<Symbol>
     {
@@ -123,6 +101,38 @@ class Parser constructor(private val scanner: Scanner) {
         }
 
         return symbols
+    }
+
+    // վերլուծել մեկ հայտարարություն
+    private fun declaration(single: Boolean): List<Symbol>
+    {
+        val symbols = arrayListOf<Symbol>()
+
+        val ty = type(false)
+
+        symbols.add(oneNameWithCheck(ty))
+        if( !single ) {
+            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
+                match(Token.ՍՏՈՐԱԿԵՏ)
+                symbols.add(oneNameWithCheck(ty))
+            }
+        }
+
+        return symbols
+    }
+
+    // հայտարարված մեկ անունի ստուգելը
+    private fun oneNameWithCheck(ty: Type): Symbol
+    {
+        val line = scanner.getLine()
+        val nm = match(Token.ԱՆՈՒՆ)
+        val sym = Symbol(nm, ty)
+
+        if( symbolTable.contains(sym) )
+            throw ParseError("«${sym.id}» անունն արդեն հայտարարված է", line)
+        symbolTable.add(sym)
+
+        return sym
     }
 
     // հրամանների հաջորդականություն

@@ -1,27 +1,29 @@
 package algorithmic.engine
 
+import algorithmic.parser.typeOf
+
 // արտահայտությունների բազային դաս
 sealed class Expression {
-    abstract fun type(): Type
+    var type: Type = Type.VOID
 }
 
 // թվային հաստատուն
 class Numeric(val value: Double) : Expression() {
-    override fun type(): Type = Type.REAL
+    init { type = Type.REAL }
 
     override fun toString(): String = value.toString()
 }
 
 // տեքստային հաստատուն
 class Text(val value: String) : Expression() {
-    override fun type(): Type = Type.TEXT
+    init { type = Type.TEXT }
 
     override fun toString(): String = value
 }
 
 // փոփոխական
 class Variable(val sym: Symbol) : Expression() {
-    override fun type(): Type = sym.type
+    init { type = sym.type }
 
     override fun toString(): String = sym.id
 }
@@ -31,12 +33,14 @@ enum class Operation(val text: String) {
     SUB("-"),
     MUL("*"),
     DIV("/"),
+
     EQ("="),
     NE("<>"),
     GT(">"),
     GE(">="),
     LT("<"),
     LE("<="),
+
     AND("ԵՎ"),
     OR("ԿԱՄ"),
     NOT("ՈՉ");
@@ -45,16 +49,16 @@ enum class Operation(val text: String) {
 }
 
 // ունար գործողություն
-class Unary(val operation: Operation, val subexpr: Expression) : Expression() {
-    override fun type(): Type = Type.VOID
+class Unary(val operation: Operation, val right: Expression) : Expression() {
+    init { type = typeOf(operation, right.type) }
 
     override fun toString(): String =
-        String.format("(%s %s)", operation, subexpr)
+        String.format("(%s %s)", operation, right)
 }
 
 // բինար գործողություն
 class Binary(val operation: Operation, val left: Expression, val right: Expression) : Expression() {
-    override fun type(): Type = Type.VOID
+    init { type = typeOf(operation, left.type, right.type) }
 
     override fun toString(): String =
         String.format("(%s %s %s)", left, operation, right)
@@ -62,5 +66,5 @@ class Binary(val operation: Operation, val left: Expression, val right: Expressi
 
 // ֆունկցիա ալգորիթմի կանչ
 class Apply(val callee: Signature, val arguments: List<Expression>) : Expression() {
-    override fun type(): Type = callee.resultType
+    init { type = callee.resultType }
 }
