@@ -8,11 +8,11 @@ import algorithmic.parser.Scanner
 fun main()
 {
     try {
-        val scan = Scanner("C:\\Projects\\algorithmic-kt\\cases\\ex4.alg")
+        val scan = Scanner("C:\\Projects\\algorithmic-kt\\cases\\ex2.alg")
         val pars = Parser(scan)
         val prog = pars.parse()
-        //val comp = JavaScript(prog)
-        //println(comp.compile())
+        val comp = JavaScript(prog)
+        println(comp.compile())
         val bc = ByteCode(prog)
         bc.compile()
     }

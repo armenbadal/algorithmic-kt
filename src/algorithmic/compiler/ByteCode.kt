@@ -86,8 +86,10 @@ class ByteCode(private val program: Program) {
         when( stat ) {
             is Sequence -> code(stat)
             is Assignment -> code(stat)
+            is Branching -> code(stat)
+            is Repetition -> code(stat)
             is Result -> code(stat)
-            else -> throw CompileError("Չիրականացված թարգմանություն։")
+            is Call -> code(stat)
         }
     }
 
@@ -106,6 +108,12 @@ class ByteCode(private val program: Program) {
             instructionList.append(ASTORE(ix))
     }
 
+    private fun code(bra: Branching)
+    {}
+
+    private fun code(rep: Repetition)
+    {}
+
     private fun code(rs: Result)
     {
         code(rs.value)
@@ -113,6 +121,16 @@ class ByteCode(private val program: Program) {
             instructionList.append(InstructionConst.DRETURN)
         else if( rs.value.type == Type.TEXT )
             instructionList.append(InstructionConst.ARETURN)
+    }
+
+    private fun code(cl: Call)
+    {
+        cl.arguments.forEach { code(it) }
+        val aty = cl.callee.parametersTypes.map { bcelType(it) }
+        val inv = factory.createInvoke(className, cl.callee.name,
+                bcelType(cl.callee.resultType), aty.toTypedArray(),
+                Const.INVOKESTATIC)
+        instructionList.append(inv)
     }
 
     private fun code(expr: Expression)
