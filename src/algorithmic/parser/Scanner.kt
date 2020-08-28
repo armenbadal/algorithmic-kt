@@ -40,6 +40,11 @@ class Scanner constructor(val filename: String) {
 
         whitespaces()
 
+        if( ch == '{' ) {
+            comment()
+            return next()
+        }
+
         if( ch.isLetter() )
             return keywordOrIdentifier()
 
@@ -67,6 +72,14 @@ class Scanner constructor(val filename: String) {
                 ++line
             ch = read()
         }
+    }
+
+    // մեկնաբանություն
+    private fun comment()
+    {
+        while( ch != '}' )
+            ch = read()
+        ch = read()
     }
 
     // ծառայողական բառ կամ անուն
