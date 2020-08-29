@@ -27,7 +27,7 @@ class ByteCode(private val program: Program) {
     private lateinit var classGenerator: ClassGen
     private lateinit var constantPool: ConstantPoolGen
     private lateinit var factory: InstructionFactory
-    private lateinit var instructionList: InstructionList
+    private lateinit var instructions: InstructionList
 
     private lateinit var methodGenerator: MethodGen
     private val nameIndices = hashMapOf<String, Int>()
@@ -37,7 +37,7 @@ class ByteCode(private val program: Program) {
         val flags = Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt()
         classGenerator = ClassGen(className, "java.lang.Object", fileName, flags, arrayOf())
         constantPool = classGenerator.constantPool
-        instructionList = InstructionList()
+        instructions = InstructionList()
 
         program.algorithms.forEach { code(it) }
 
@@ -51,7 +51,7 @@ class ByteCode(private val program: Program) {
         val parNames = alg.parameters.map { it.id }
         methodGenerator = MethodGen(access, bcelType(alg.returnType),
                 parTypes.toTypedArray(), parNames.toTypedArray(),
-                alg.name, "HelloWorld", instructionList, constantPool)
+                alg.name, "HelloWorld", instructions, constantPool)
         factory = InstructionFactory(classGenerator, constantPool)
 
         // վերցնել մեթոդի պարամետրերի ինդեքսները
@@ -65,10 +65,10 @@ class ByteCode(private val program: Program) {
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
             nameIndices[vr.id] = lv.index
             if( Type.REAL == vr.type )
-                instructionList.append(PUSH(constantPool, 0.0))
+                instructions.append(factory.createConstant(0.0))
             else if( Type.TEXT == vr.type )
-                instructionList.append(InstructionConst.ACONST_NULL)
-            instructionList.append(InstructionFactory.createStore(ty, lv.index))
+                instructions.append(InstructionConst.ACONST_NULL)
+            instructions.append(InstructionFactory.createStore(ty, lv.index))
         }
 
         // մեթոդի մարմինը
@@ -78,7 +78,7 @@ class ByteCode(private val program: Program) {
         methodGenerator.setMaxLocals()
 
         classGenerator.addMethod(methodGenerator.method)
-        instructionList.dispose()
+        instructions.dispose()
     }
 
     private fun code(stat: Statement)
@@ -102,35 +102,71 @@ class ByteCode(private val program: Program) {
     {
         code(asg.value)
         val ix = nameIndices[asg.sym.id]!!
-        if( Type.REAL == asg.sym.type )
-            instructionList.append(DSTORE(ix))
-        else if( Type.TEXT == asg.sym.type )
-            instructionList.append(ASTORE(ix))
+        instructions.append(InstructionFactory.createStore(bcelType(asg.sym.type), ix))
     }
 
     private fun code(bra: Branching)
-    {}
+    {
+        // ԵԹԵ և ԻՍԿ ԵԹԵ ճյուղերից ցիկլի վերջին անցման հղումներ
+        val gofis = arrayListOf<BranchInstruction>()
+        var p: Statement = bra
+        while( p is Branching ) {
+            // ճյուղավորման պայմանը
+            code(p.condition)
+            val bri = createIfJump(Const.IFEQ, null) // ?
+            instructions.append(bri)
+            // then ճյուղը
+            code(p.decision)
+            val fi = createGoto(null)
+            instructions.append(fi)
+            gofis.add(fi)
+            bri.target = instructions.append(createNop())
+            // անցում else ճյուղին
+            p = p.alternative
+        }
+
+        // վերջին else բլոկը
+        if( p is Sequence )
+            if( !p.items.isEmpty() )
+                code(p)
+
+        // ճյուղավորման վերջը
+        val endif = instructions.append(createNop())
+        gofis.forEach { e -> e.target = endif }
+    }
 
     private fun code(rep: Repetition)
-    {}
+    {
+        // կրկնման սկիզբը
+        val bg = instructions.append(createNop())
+        // պայման, որը ստուգվում է ամեն կրկնությունից առաջ
+        code(rep.condition)
+        val bri = createIfJump(Const.IFEQ, null)
+        instructions.append(bri)
+
+        // կրկնության մարմինը
+        code(rep.body)
+
+        // անպայման անցում կրկնման սկզբին
+        instructions.append(createGoto(bg))
+        // կրկնման մարմնից դուրս
+        bri.target = instructions.append(createNop())
+    }
 
     private fun code(rs: Result)
     {
         code(rs.value)
-        if( rs.value.type == Type.REAL )
-            instructionList.append(InstructionConst.DRETURN)
-        else if( rs.value.type == Type.TEXT )
-            instructionList.append(InstructionConst.ARETURN)
+        instructions.append(InstructionFactory.createReturn(bcelType(rs.value.type)))
     }
 
     private fun code(cl: Call)
     {
-        cl.arguments.forEach { code(it) }
-        val aty = cl.callee.parametersTypes.map { bcelType(it) }
-        val inv = factory.createInvoke(className, cl.callee.name,
-                bcelType(cl.callee.resultType), aty.toTypedArray(),
+        cl.apply.arguments.forEach { code(it) }
+        val aty = cl.apply.callee.parametersTypes.map { bcelType(it) }
+        val inv = factory.createInvoke(className, cl.apply.callee.name,
+                bcelType(cl.apply.callee.resultType), aty.toTypedArray(),
                 Const.INVOKESTATIC)
-        instructionList.append(inv)
+        instructions.append(inv)
     }
 
     private fun code(expr: Expression)
@@ -149,21 +185,58 @@ class ByteCode(private val program: Program) {
     {
         code(bi.left)
         code(bi.right)
-        val inst = when( bi.operation ) {
+
+        when( bi.operation ) {
+            in Operation.ADD..Operation.DIV -> arithmetic(bi.operation)
+            in Operation.EQ..Operation.LE -> comparison(bi.operation)
+            in Operation.AND..Operation.OR -> logical(bi.operation)
+            else -> {}
+        }
+    }
+
+    private fun arithmetic(oper: Operation)
+    {
+        val inst = when( oper ) {
             Operation.ADD -> InstructionConst.DADD
             Operation.SUB -> InstructionConst.DSUB
             Operation.MUL -> InstructionConst.DMUL
             Operation.DIV -> InstructionConst.DDIV
             else -> InstructionConst.NOP
         }
-        instructionList.append(inst)
+        instructions.append(inst)
     }
+
+    private fun comparison(oper: Operation)
+    {
+        instructions.append(InstructionConst.DCMPL)
+
+        val opcode = when( oper ) {
+            Operation.EQ -> Const.IFNE
+            Operation.NE -> Const.IFEQ
+            Operation.GT -> Const.IFLE
+            Operation.GE -> Const.IFLT
+            Operation.LT -> Const.IFGE
+            Operation.LE -> Const.IFGT
+            else -> 0
+        }
+
+        val bri = createIfJump(opcode, null)
+        instructions.append(bri)
+        instructions.append(factory.createConstant(1))
+        val go = createGoto(null)
+        instructions.append(go)
+        bri.target = instructions.append(factory.createConstant(0))
+        go.target = instructions.append(createNop())
+    }
+
+    private fun logical(oper: Operation)
+    {}
 
     private fun code(un: Unary)
     {
         code(un.right)
         if( un.operation == Operation.SUB )
-            instructionList.append(InstructionConst.DNEG)
+            instructions.append(InstructionConst.DNEG)
     }
 
     private fun code(ap: Apply)
@@ -173,29 +246,33 @@ class ByteCode(private val program: Program) {
         val inv = factory.createInvoke(className, ap.callee.name,
                 bcelType(ap.callee.resultType), aty.toTypedArray(),
                 Const.INVOKESTATIC)
-        instructionList.append(inv)
+        instructions.append(inv)
     }
 
     private fun code(tx: Text)
     {
-        instructionList.append(PUSH(constantPool, tx.value))
+        instructions.append(factory.createConstant(tx.value))
     }
 
     private fun code(nm: Numeric)
     {
-        instructionList.append(PUSH(constantPool, nm.value))
+        instructions.append(factory.createConstant(nm.value))
     }
 
     private fun code(vr: Variable)
     {
         val ix = nameIndices[vr.sym.id]!!
-        var ld = InstructionConst.NOP
-        if( vr.sym.type == Type.REAL )
-            ld = InstructionFactory.createLoad(BCELType.DOUBLE, ix)
-        else if( vr.sym.type == Type.TEXT )
-            ld = InstructionFactory.createLoad(BCELType.STRING, ix)
-        instructionList.append(ld)
+        instructions.append(InstructionFactory.createLoad(bcelType(vr.sym.type), ix))
     }
+
+    private fun createGoto(target: InstructionHandle?) =
+        InstructionFactory.createBranchInstruction(Const.GOTO, target)
+
+    private fun createIfJump(opcode: Short, target: InstructionHandle?) =
+        InstructionFactory.createBranchInstruction(opcode, target)
+
+    private fun createNop() =
+        InstructionFactory.createNull(BCELType.VOID)
 
     private fun bcelType(type: Type): BCELType =
         when( type ) {

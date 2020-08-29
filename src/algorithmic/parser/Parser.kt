@@ -20,18 +20,12 @@ class Parser constructor(private val scanner: Scanner) {
     private val symbolTable = arrayListOf<Symbol>()
     // սահմանված ալգորիթմներ
     private val signatures = builtIns()
-    private val unresolved = arrayListOf<Signature>()
 
     // վերլուծել ծրագիրը
     fun parse(): Program
     {
         while( see(Token.ԱԼԳՈՐԻԹՄ) )
             algorithm()
-
-        for( us in unresolved ) {
-            // TODO: որոնել signatures-ի մեջ; եթե գտնված չէ,
-            //       արտածել հաղորդագրություն սխալի մասին
-        }
 
         return program
     }
@@ -57,7 +51,13 @@ class Parser constructor(private val scanner: Scanner) {
 
         // ստեղծել նոր ալգորիթմի նկարագրությունը
         val sig = Signature(name, resultType, params.map { it.type })
-        signatures.add(sig)
+        signatures[name] = sig
+
+        // երբ սա պարզապես հայտարարություն է
+        if( see(Token.ՍՏՈՐԵՎ) ) {
+            pass()
+            return
+        }
 
         // լոկալ անուններ
         if ( !see(Token.ՍԿԻԶԲ) )
@@ -184,14 +184,18 @@ class Parser constructor(private val scanner: Scanner) {
     // ալգորիթմի կիրառում
     private fun algorithmCall(name: String): Call
     {
+        if( !signatures.containsKey(name) )
+            throw ParseError("«$name» ալգորիթմը հայտարարված կամ սհմանված չէ", scanner.getLine())
+
         match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
         val arguments = expressionList()
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
 
-        val alg = signatures.find { it.name == name }
-                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.getLine())
+        val candidate = signatures.getValue(name)
+        if( !candidate.isApplicable(arguments) )
+            throw TypeError("«$name» ալգորիթմը սահմանված է «$candidate» պարամետրով:", scanner.getLine())
 
-        return Call(alg, arguments)
+        return Call(candidate, arguments)
     }
 
     // արտահայտությունների ցուցակ
@@ -218,11 +222,11 @@ class Parser constructor(private val scanner: Scanner) {
         val alte = when {
             see(Token.ԻՍԿ) -> {
                 pass()
-                Branching(cond, deci, branching(false))
+                branching(false)
             }
             see(Token.ԱՅԼԱՊԵՍ) -> {
                 pass()
-                Branching(cond, deci, sequence())
+                sequence()
             }
             else -> {
                 Sequence()
@@ -248,8 +252,8 @@ class Parser constructor(private val scanner: Scanner) {
     // արդյունք
     private fun result(): Statement
     {
-        if( signatures.last().resultType == Type.VOID )
-            throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
+//        if( signatures.last().resultType == Type.VOID )
+//            throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
 
         match(Token.ԱՐԴՅՈՒՆՔ)
         val value = expression()
@@ -364,13 +368,18 @@ class Parser constructor(private val scanner: Scanner) {
     // ֆունկցիա ալգորիթմի կանչ
     private fun apply(name: String): Expression
     {
-        match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
-        val args = expressionList()
-        match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
-        val func = signatures.find { it.name == name }
-                ?: throw ParseError("Անծանոթ ֆունկցիայի՝ «$name», կիրառություն:", scanner.getLine())
+        if( !signatures.containsKey(name) )
+            throw ParseError("«$name» ալգորիթմը հայտարարված կամ սահմանված չէ", scanner.getLine())
 
-        return Apply(func, args)
+        match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
+        val arguments = expressionList()
+        match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+
+        val candidate = signatures.getValue(name)
+        if( !candidate.isApplicable(arguments) )
+            throw TypeError("«$name» ալգորիթմը սահմանված է «$candidate» պարամետրով:", scanner.getLine())
+
+        return Apply(candidate, arguments)
     }
 
     private fun see(exp: Token): Boolean =
@@ -404,18 +413,4 @@ class Parser constructor(private val scanner: Scanner) {
 
         throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
     }
-
-//    // որոնել տրված անունով ալգորիթմը
-//    private fun lookupAlgorithm(sig: Signature): Signature
-//    {
-//        // որոնել արդեն սահմանվածների ու ներդրվածների մեջ
-//        for( s in signatures )
-//            if( s == sig )
-//                return s
-//
-//        // եթե գտնված չէ, ավելացնել հատուկ ցուցակում՝
-//        // վերջում նորից ստուգելու համար
-//        unresolved.add(sig)
-//        return sig
-//    }
 }

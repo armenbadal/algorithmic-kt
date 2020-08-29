@@ -70,8 +70,8 @@ class JavaScript(val program: Program) {
 
     private fun compile(cl: Call): String
     {
-        val args = cl.arguments.joinToString { compile(it) }
-        return "${cl.callee.name}($args)"
+        val args = cl.apply.arguments.joinToString { compile(it) }
+        return "${cl.apply.callee.name}($args)"
     }
 
     private fun compile(expr: Expression): String =

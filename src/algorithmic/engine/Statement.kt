@@ -26,4 +26,6 @@ class Result(val value: Expression) : Statement() {
 }
 
 // ալգորիթմի կիրառում
-class Call(val callee: Signature, val arguments: List<Expression>) : Statement() {}
+class Call(callee: Signature, arguments: List<Expression>) : Statement() {
+    val apply = Apply(callee, arguments)
+}
