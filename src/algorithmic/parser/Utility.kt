@@ -1,7 +1,6 @@
 package algorithmic.parser
 
 import algorithmic.engine.Operation
-import algorithmic.engine.Symbol
 import algorithmic.engine.Type
 
 fun asType(name: String): Type =
@@ -41,6 +40,9 @@ fun typeOf(op: Operation, left: Type, right: Type): Type
 {
     if( left == Type.REAL && right == Type.REAL )
         return Type.REAL
+
+    if (left == Type.TEXT && right == Type.TEXT )
+        return Type.TEXT
 
     throw TypeError("Տիպերի անհամապատասխանություն", 0)
 }

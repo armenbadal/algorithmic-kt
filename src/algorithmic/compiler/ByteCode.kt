@@ -5,19 +5,9 @@ import algorithmic.engine.Type
 import org.apache.bcel.Const
 import org.apache.bcel.generic.*
 
-typealias BCELType = org.apache.bcel.generic.Type;
+typealias BCELType = org.apache.bcel.generic.Type
 
 class ByteCode(private val program: Program) {
-//    private data class ProgramCodeContext(
-//        val classGenerator: ClassGen,
-//        val constantPoolGen: ConstantPoolGen,
-//        val instructionList: InstructionList
-//    )
-//    private data class MethodCodeContext(
-//        val methodGenerator: MethodGen,
-//        val instructionFactory: InstructionFactory
-//    )
-
     // սկզբնական ծրագրի ֆայլի անունը
     private val fileName: String = program.name
 
@@ -32,10 +22,15 @@ class ByteCode(private val program: Program) {
     private lateinit var methodGenerator: MethodGen
     private val nameIndices = hashMapOf<String, Int>()
 
+
     fun compile(/* TODO: add parameter for output file */)
     {
-        val flags = Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt()
-        classGenerator = ClassGen(className, "java.lang.Object", fileName, flags, arrayOf())
+        classGenerator = ClassGen(
+                className,
+                "java.lang.Object",
+                fileName,
+                Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt(),
+                arrayOf())
         constantPool = classGenerator.constantPool
         instructions = InstructionList()
 
@@ -46,20 +41,25 @@ class ByteCode(private val program: Program) {
 
     private fun code(alg: Algorithm)
     {
-        val access = Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt()
+        val accessFlags = Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt()
         val parTypes = alg.parameters.map { bcelType(it.type) }
         val parNames = alg.parameters.map { it.id }
-        methodGenerator = MethodGen(access, bcelType(alg.returnType),
-                parTypes.toTypedArray(), parNames.toTypedArray(),
-                alg.name, "HelloWorld", instructions, constantPool)
+        methodGenerator = MethodGen(
+                accessFlags,
+                bcelType(alg.returnType),
+                parTypes.toTypedArray(),
+                parNames.toTypedArray(),
+                alg.name,
+                className,
+                instructions,
+                constantPool)
         factory = InstructionFactory(classGenerator, constantPool)
 
         // վերցնել մեթոդի պարամետրերի ինդեքսները
         nameIndices.clear()
-        for( vr in methodGenerator.localVariables )
-            nameIndices[vr.name] = vr.index
+        methodGenerator.localVariables.forEach { nameIndices[it.name] = it.index }
 
-        // հայտարարել լոկալ փոփոխականները
+        // հայտարարել լոկալ փոփոխականները և վերագրել լռելության արժեքները
         for( vr in alg.locals ) {
             val ty = bcelType(vr.type)
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
@@ -67,7 +67,7 @@ class ByteCode(private val program: Program) {
             if( Type.REAL == vr.type )
                 instructions.append(factory.createConstant(0.0))
             else if( Type.TEXT == vr.type )
-                instructions.append(InstructionConst.ACONST_NULL)
+                instructions.append(factory.createConstant(""))
             instructions.append(InstructionFactory.createStore(ty, lv.index))
         }
 
@@ -113,7 +113,7 @@ class ByteCode(private val program: Program) {
         while( p is Branching ) {
             // ճյուղավորման պայմանը
             code(p.condition)
-            val bri = createIfJump(Const.IFEQ, null) // ?
+            val bri = createIfJump(Const.IFEQ, null)
             instructions.append(bri)
             // then ճյուղը
             code(p.decision)
@@ -127,7 +127,7 @@ class ByteCode(private val program: Program) {
 
         // վերջին else բլոկը
         if( p is Sequence )
-            if( !p.items.isEmpty() )
+            if( p.items.isNotEmpty() )
                 code(p)
 
         // ճյուղավորման վերջը
@@ -161,12 +161,7 @@ class ByteCode(private val program: Program) {
 
     private fun code(cl: Call)
     {
-        cl.apply.arguments.forEach { code(it) }
-        val aty = cl.apply.callee.parametersTypes.map { bcelType(it) }
-        val inv = factory.createInvoke(className, cl.apply.callee.name,
-                bcelType(cl.apply.callee.resultType), aty.toTypedArray(),
-                Const.INVOKESTATIC)
-        instructions.append(inv)
+        code(cl.apply)
     }
 
     private fun code(expr: Expression)
@@ -178,39 +173,34 @@ class ByteCode(private val program: Program) {
             is Text -> code(expr)
             is Numeric -> code(expr)
             is Variable -> code(expr)
+            is Logical -> code(expr)
         }
     }
 
     private fun code(bi: Binary)
     {
-        code(bi.left)
-        code(bi.right)
-
         when( bi.operation ) {
-            in Operation.ADD..Operation.DIV -> arithmetic(bi.operation)
-            in Operation.EQ..Operation.LE -> comparison(bi.operation)
-            in Operation.AND..Operation.OR -> logical(bi.operation)
+            in Operation.ADD..Operation.DIV -> arithmetic(bi)
+            in Operation.EQ..Operation.LE -> comparison(bi)
+            in Operation.AND..Operation.OR -> logical(bi)
             else -> {}
         }
     }
 
-    private fun arithmetic(oper: Operation)
+    private fun arithmetic(bi: Binary)
     {
-        val inst = when( oper ) {
-            Operation.ADD -> InstructionConst.DADD
-            Operation.SUB -> InstructionConst.DSUB
-            Operation.MUL -> InstructionConst.DMUL
-            Operation.DIV -> InstructionConst.DDIV
-            else -> InstructionConst.NOP
-        }
-        instructions.append(inst)
+        code(bi.left)
+        code(bi.right)
+        instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, BCELType.DOUBLE))
     }
 
-    private fun comparison(oper: Operation)
+    private fun comparison(bi: Binary)
     {
+        code(bi.left)
+        code(bi.right)
         instructions.append(InstructionConst.DCMPL)
 
-        val opcode = when( oper ) {
+        val opcode = when( bi.operation ) {
             Operation.EQ -> Const.IFNE
             Operation.NE -> Const.IFEQ
             Operation.GT -> Const.IFLE
@@ -220,33 +210,64 @@ class ByteCode(private val program: Program) {
             else -> 0
         }
 
-        val bri = createIfJump(opcode, null)
-        instructions.append(bri)
+        val bri = instructions.append(createIfJump(opcode, null))
         instructions.append(factory.createConstant(1))
-        val go = createGoto(null)
-        instructions.append(go)
+        val go = instructions.append(createGoto(null))
         bri.target = instructions.append(factory.createConstant(0))
         go.target = instructions.append(createNop())
     }
 
-    private fun logical(oper: Operation)
-    {}
+    private fun logical(bi: Binary)
+    {
+        if( bi.operation == Operation.AND ) {
+            code(bi.left)
+            val zr0 = instructions.append(createIfJump(Const.IFEQ, null))
+            code(bi.right)
+            val zr1 = instructions.append(createIfJump(Const.IFEQ, null))
+            instructions.append(factory.createConstant(1))
+            val en = instructions.append(createGoto(null))
+            val zc = instructions.append(factory.createConstant(1))
+            zr0.target = zc
+            zr1.target = zc
+            en.target = instructions.append(createNop())
+        }
+        else if( bi.operation == Operation.OR ) {
+//            0: code(left)
+//            1: ifne          8
+//            4: code(right)
+//            5: ifeq          12
+//            8: const         1
+//            9: goto          13
+//            12: const        0
+//            13: nop
+        }
+    }
 
     private fun code(un: Unary)
     {
         code(un.right)
         if( un.operation == Operation.SUB )
             instructions.append(InstructionConst.DNEG)
+        //else if( un.operation == Operation.NOT )
+        //    instructions.append(InstructionConst.DNEG)
     }
 
     private fun code(ap: Apply)
     {
         ap.arguments.forEach { code(it) }
         val aty = ap.callee.parametersTypes.map { bcelType(it) }
-        val inv = factory.createInvoke(className, ap.callee.name,
-                bcelType(ap.callee.resultType), aty.toTypedArray(),
+        val inv = factory.createInvoke(
+                className,
+                ap.callee.name,
+                bcelType(ap.callee.resultType),
+                aty.toTypedArray(),
                 Const.INVOKESTATIC)
         instructions.append(inv)
+    }
+
+    private fun code(lg: Logical)
+    {
+        instructions.append(factory.createConstant(lg.value == "ՃԻՇՏ"))
     }
 
     private fun code(tx: Text)
@@ -279,5 +300,6 @@ class ByteCode(private val program: Program) {
             Type.VOID -> BCELType.VOID
             Type.TEXT -> BCELType.STRING
             Type.REAL -> BCELType.DOUBLE
+            Type.BOOL -> BCELType.BOOLEAN
         }
 }

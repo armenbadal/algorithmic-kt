@@ -45,5 +45,6 @@ Multiplication = Factor {('*' | '/') Factor}.
 Factor = NUMBER | TEXT | ԱՆՈՒՆ
     | ('+' | '-') Factor
     | ԱՆՈՒՆ '(' [ExpressionList] ')'
-    | '(' Expression ')'.
+    | '(' Expression ')'
+    | 'ՃԻՇՏ' | 'ԿԵՂԾ'.
 ```

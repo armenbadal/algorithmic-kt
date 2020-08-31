@@ -28,6 +28,13 @@ class Variable(val sym: Symbol) : Expression() {
     override fun toString(): String = sym.id
 }
 
+// տրամաբանական
+class Logical(val value: String) : Expression() {
+    init { type = Type.BOOL; }
+
+    override fun toString(): String = value
+}
+
 enum class Operation(val text: String) {
     ADD("+"),
     SUB("-"),

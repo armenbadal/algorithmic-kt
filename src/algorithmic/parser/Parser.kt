@@ -141,22 +141,14 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // մեկ կառուցվածքի վերլուծություն
-    private fun statement(): Statement
-    {
-        if( see(Token.ԱՆՈՒՆ) )
-            return assignmentOrCall()
-
-        if( see(Token.ԵԹԵ) )
-            return branching(true)
-
-        if( see(Token.ՔԱՆԻ) )
-            return repetition()
-
-        if( see(Token.ԱՐԴՅՈՒՆՔ) )
-            return result()
-
-        throw ParseError("Սպասվում էր ... բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
-    }
+    private fun statement() =
+        when {
+            see(Token.ԱՆՈՒՆ) -> assignmentOrCall()
+            see(Token.ԵԹԵ) -> branching(true)
+            see(Token.ՔԱՆԻ) -> repetition()
+            see(Token.ԱՐԴՅՈՒՆՔ) -> result()
+            else -> throw ParseError("Սպասվում էր ԱՆՈՒՆ, ԵԹԵ, ՔԱՆԻ կամ ԱՐԴՅՈՒՆՔ, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
+        }
 
     // վերագրում կամ ալգորիթմի կիրառում
     private fun assignmentOrCall(): Statement
@@ -218,8 +210,8 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ԵԹԵ)
         val cond = expression()
         match(Token.ԱՊԱ)
-        val deci = sequence()
-        val alte = when {
+        val decision = sequence()
+        val alternative = when {
             see(Token.ԻՍԿ) -> {
                 pass()
                 branching(false)
@@ -234,7 +226,7 @@ class Parser constructor(private val scanner: Scanner) {
         }
         if( closing )
             match(Token.ԱՎԱՐՏ)
-        return Branching(cond, deci, alte)
+        return Branching(cond, decision, alternative)
     }
 
     // կրկնություն
@@ -261,7 +253,7 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // արտահայտություն
-    private fun expression(): Expression =
+    private fun expression() =
         disjunction()
 
     // դիզյունկցիա
@@ -313,23 +305,29 @@ class Parser constructor(private val scanner: Scanner) {
     // գումար
     private fun addition(): Expression
     {
-        var res = multiplication()
+        var left = multiplication()
         while( see(Token.ADD, Token.SUB) ) {
             val oper = asOperation(pass())
-            res = Binary(oper, res, multiplication())
+            val right = multiplication()
+            if( left.type != Type.REAL || right.type != Type.REAL )
+                throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
+            left = Binary(oper, left, right)
         }
-        return res
+        return left
     }
 
     // արտադրյալ
     private fun multiplication(): Expression
     {
-        var res = factor()
+        var left = factor()
         while( see(Token.MUL, Token.DIV) ) {
             val oper = asOperation(pass())
-            res = Binary(oper, res, factor())
+            val right = factor()
+            if( left.type != Type.REAL || right.type != Type.REAL )
+                throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
+            left = Binary(oper, left, right)
         }
-        return res
+        return left
     }
 
     // ամենապարզ արտահայտությունը
@@ -349,6 +347,10 @@ class Parser constructor(private val scanner: Scanner) {
                     apply(name)
                 else
                     Variable(lookup(name))
+            }
+            Token.ՃԻՇՏ, Token.ԿԵՂԾ -> {
+                val value = pass()
+                Logical(value)
             }
             Token.SUB, Token.ADD -> {
                 val oper = asOperation(pass())
