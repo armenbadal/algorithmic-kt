@@ -82,6 +82,7 @@ class JavaScript(val program: Program) {
             is Text -> compile(expr)
             is Numeric -> compile(expr)
             is Variable -> compile(expr)
+            is Logical -> compile(expr)
         }
 
     private fun compile(ex: Binary): String
@@ -117,8 +118,12 @@ class JavaScript(val program: Program) {
     private fun compile(ex: Variable): String =
         ex.sym.id
 
+    private fun compile(ex: Logical): String =
+        if( ex.value == "ՃԻՇՏ" ) "true" else "false"
+
     private fun compile(sym: Symbol): String =
         "let ${sym.id} = " + when(sym.type) {
+            Type.BOOL -> "false"
             Type.REAL -> "0.0"
             Type.TEXT -> "''"
             Type.VOID -> ""

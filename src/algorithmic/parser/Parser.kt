@@ -82,6 +82,9 @@ class Parser constructor(private val scanner: Scanner) {
         if( see(Token.ՏԵՔՍՏ) )
             return asType(pass())
 
+        if( see(Token.ԲՈՒԼՅԱՆ) )
+            return asType(pass())
+
         if( opt )
             return Type.VOID
 
@@ -259,47 +262,62 @@ class Parser constructor(private val scanner: Scanner) {
     // դիզյունկցիա
     private fun disjunction(): Expression
     {
-        var res = conjunction()
+        var left = conjunction()
         while( see(Token.ԿԱՄ) ) {
             pass()
             val oper = asOperation("ԿԱՄ")
-            res = Binary(oper, res, conjunction())
+            val right = conjunction()
+            if( left.type != Type.BOOL || right.type != Type.BOOL )
+                throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
+            left = Binary(oper, Type.BOOL, left, right)
         }
-        return res
+        return left
     }
 
     // կոնյունկցիա
     private fun conjunction(): Expression
     {
-        var res = equality()
+        var left = equality()
         while( see(Token.ԵՎ) ) {
             pass()
             val oper = asOperation("ԵՎ")
-            res = Binary(oper, res, equality())
+            val right = equality()
+            if( left.type != Type.BOOL || right.type != Type.BOOL )
+                throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
+            left = Binary(oper, Type.BOOL, left, right)
         }
-        return res
+        return left
     }
 
     // հավասարություն
     private fun equality(): Expression
     {
-        var res = comparison()
+        var left = comparison()
         if( see(Token.EQ, Token.NE) ) {
             val oper = asOperation(pass())
-            res = Binary(oper, res, comparison())
+            val right = comparison()
+            if( left.type != right.type )
+                throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
+            left = Binary(oper, Type.BOOL, left, right)
         }
-        return res
+        return left
     }
 
     // համեմատություն
     private fun comparison(): Expression
     {
-        var res = addition()
+        var left = addition()
         if( see(Token.GT, Token.GE, Token.LT, Token.LE) ) {
             val oper = asOperation(pass())
-            res = Binary(oper, res, addition())
+            val right = addition()
+            // տիպերի ստուգում
+            if( left.type == Type.BOOL || right.type == Type.BOOL )
+                throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
+            if( left.type != right.type )
+                throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
+            left = Binary(oper, Type.BOOL, left, right)
         }
-        return res
+        return left
     }
 
     // գումար
@@ -311,7 +329,7 @@ class Parser constructor(private val scanner: Scanner) {
             val right = multiplication()
             if( left.type != Type.REAL || right.type != Type.REAL )
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
-            left = Binary(oper, left, right)
+            left = Binary(oper, Type.REAL, left, right)
         }
         return left
     }
@@ -325,7 +343,7 @@ class Parser constructor(private val scanner: Scanner) {
             val right = factor()
             if( left.type != Type.REAL || right.type != Type.REAL )
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
-            left = Binary(oper, left, right)
+            left = Binary(oper, Type.REAL, left, right)
         }
         return left
     }
@@ -352,9 +370,15 @@ class Parser constructor(private val scanner: Scanner) {
                 val value = pass()
                 Logical(value)
             }
-            Token.SUB, Token.ADD -> {
+            Token.SUB, Token.ADD, Token.ՈՉ -> {
                 val oper = asOperation(pass())
-                Unary(oper, factor())
+                val right = factor()
+                // տիպերի ստուգում
+                if( oper == Operation.NOT && right.type != Type.BOOL )
+                    throw TypeError("«ՈՉ» գործողությունը կիրառելի է միայն ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
+                if( (oper == Operation.SUB || oper == Operation.ADD) && right.type != Type.REAL )
+                    throw TypeError("«${oper.text}» գործողությունը կիրառելի է միայն ԻՐԱԿԱՆ արժեքներին։", scanner.getLine())
+                Unary(oper, right.type, right)
             }
             Token.ՁԱԽ_ՓԱԿԱԳԻԾ -> {
                 pass()

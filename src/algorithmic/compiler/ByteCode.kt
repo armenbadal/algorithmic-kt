@@ -64,10 +64,12 @@ class ByteCode(private val program: Program) {
             val ty = bcelType(vr.type)
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
             nameIndices[vr.id] = lv.index
-            if( Type.REAL == vr.type )
-                instructions.append(factory.createConstant(0.0))
-            else if( Type.TEXT == vr.type )
-                instructions.append(factory.createConstant(""))
+            when (vr.type) {
+                Type.REAL -> instructions.append(factory.createConstant(0.0))
+                Type.TEXT -> instructions.append(factory.createConstant(""))
+                Type.BOOL -> instructions.append(factory.createConstant(false))
+                Type.VOID -> {}
+            }
             instructions.append(InstructionFactory.createStore(ty, lv.index))
         }
 
@@ -232,14 +234,14 @@ class ByteCode(private val program: Program) {
             en.target = instructions.append(createNop())
         }
         else if( bi.operation == Operation.OR ) {
-//            0: code(left)
-//            1: ifne          8
-//            4: code(right)
-//            5: ifeq          12
-//            8: const         1
-//            9: goto          13
-//            12: const        0
-//            13: nop
+            code(bi.left)
+            val ne = instructions.append(createIfJump(Const.IFNE, null))
+            code(bi.right)
+            val eq = instructions.append(createIfJump(Const.IFEQ, null))
+            ne.target = instructions.append(factory.createConstant(1))
+            val en = instructions.append(createGoto(null))
+            eq.target = instructions.append(factory.createConstant(0))
+            en.target = instructions.append(createNop())
         }
     }
 
@@ -248,8 +250,13 @@ class ByteCode(private val program: Program) {
         code(un.right)
         if( un.operation == Operation.SUB )
             instructions.append(InstructionConst.DNEG)
-        //else if( un.operation == Operation.NOT )
-        //    instructions.append(InstructionConst.DNEG)
+        else if( un.operation == Operation.NOT ) {
+            val ne = instructions.append(createIfJump(Const.IFNE, null))
+            instructions.append(factory.createConstant(1))
+            val en = instructions.append(createGoto(null))
+            ne.target = instructions.append(factory.createConstant(0))
+            en.target = instructions.append(createNop())
+        }
     }
 
     private fun code(ap: Apply)

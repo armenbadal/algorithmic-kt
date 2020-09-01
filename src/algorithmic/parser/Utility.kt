@@ -5,9 +5,10 @@ import algorithmic.engine.Type
 
 fun asType(name: String): Type =
      when( name ) {
-        "ԻՐԱԿԱՆ" -> Type.REAL
-        "ՏԵՔՍՏ" -> Type.TEXT
-        else -> throw ParseError("Անծանոթ տիպ «$name»։", 0)
+         "ԲՈՒԼՅԱՆ" -> Type.BOOL
+         "ԻՐԱԿԱՆ" -> Type.REAL
+         "ՏԵՔՍՏ" -> Type.TEXT
+         else -> throw ParseError("Անծանոթ տիպ «$name»։", 0)
     }
 
 fun asOperation(opn: String): Operation =
@@ -28,21 +29,21 @@ fun asOperation(opn: String): Operation =
         else -> throw ParseError("Անծանոթ գործողություն «$opn»։", 0)
     }
 
-fun typeOf(op: Operation, left: Type): Type
+fun typeOf(op: Operation, right: Type): Type
 {
-    if( (op == Operation.SUB || op == Operation.ADD) && left == Type.REAL )
+    if( (op == Operation.SUB || op == Operation.ADD) && right == Type.REAL )
         return Type.REAL
+
+    if( op == Operation.NOT && right == Type.BOOL )
+        return Type.BOOL
 
     throw TypeError("Տիպերի անհամապատասխանություն", 0)
 }
 
 fun typeOf(op: Operation, left: Type, right: Type): Type
 {
-    if( left == Type.REAL && right == Type.REAL )
-        return Type.REAL
-
-    if (left == Type.TEXT && right == Type.TEXT )
-        return Type.TEXT
+    if( left == right )
+        return left
 
     throw TypeError("Տիպերի անհամապատասխանություն", 0)
 }
