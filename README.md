@@ -18,14 +18,13 @@
 __Քերականություն__
 
 ```
-Program = { Algorithm }.
-Algorithm = 'ԱԼԳՈՐԻԹՄ' [Type] ԱՆՈՒՆ [Parameters]
-            DeclarationList
-            'ՍԿԻԶԲ' [StatementList] 'ՎԵՐՋ'.
+Program = 'ԾՐԱԳԻՐ' ԱՆՈՒՆ { Algorithm } 'ՍԿԻԶԲ' [StatementList] 'ՎԵՐՋ'.
+Algorithm = 'ԱԼԳՈՐԻԹՄ' [Type] ԱՆՈՒՆ [Parameters] 
+            ( 'ՍՏՈՐԵՎ' | DeclarationList 'ՍԿԻԶԲ' [StatementList] 'ՎԵՐՋ').
 Parameters = '(' Type ԱՆՈՒՆ {',' Type ԱՆՈՒՆ} ')'.
 DeclarationList = Declaration {';' Declaration}.
 Declaration = Type ԱՆՈՒՆ {',' ԱՆՈՒՆ}.
-Type = 'ԻՐԱԿԱՆ' | 'ՏԵՔՍՏ'. 
+Type = 'ԻՐԱԿԱՆ' | 'ՏԵՔՍՏ' | 'ԲՈՒԼՅԱՆ'. 
 StatementList = Statement {';' Statement}.
 Statement = ԱՆՈՒՆ ':=' Expression
     | 'ԵԹԵ' Expression 'ԱՊԱ' StatementList

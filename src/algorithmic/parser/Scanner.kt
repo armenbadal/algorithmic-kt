@@ -6,6 +6,8 @@ import java.nio.file.Paths
 
 class Scanner constructor(val filename: String) {
     private val keywords = mapOf(
+            "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
+            "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
             "ԱԼԳՈՐԻԹՄ" to Token.ԱԼԳՈՐԻԹՄ,
             "ՍՏՈՐԵՎ" to Token.ՍՏՈՐԵՎ,
             "ՍԿԻԶԲ" to Token.ՍԿԻԶԲ,

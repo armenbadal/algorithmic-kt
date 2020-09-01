@@ -9,10 +9,10 @@ typealias BCELType = org.apache.bcel.generic.Type
 
 class ByteCode(private val program: Program) {
     // սկզբնական ծրագրի ֆայլի անունը
-    private val fileName: String = program.name
+    //private val fileName: String = program.name
 
     // ստեղծվելիք դասի անունը
-    private val className = fileName.substring(0, fileName.lastIndexOf('.'))
+    private val className = program.name
 
     private lateinit var classGenerator: ClassGen
     private lateinit var constantPool: ConstantPoolGen
@@ -28,15 +28,43 @@ class ByteCode(private val program: Program) {
         classGenerator = ClassGen(
                 className,
                 "java.lang.Object",
-                fileName,
+                "<generated>",
                 Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt(),
                 arrayOf())
         constantPool = classGenerator.constantPool
         instructions = InstructionList()
 
+        // գեներացնել ալգորիթմների կոդը
         program.algorithms.forEach { code(it) }
 
-        classGenerator.getJavaClass().dump("$fileName.class")
+        // main մեթոդը
+        entryPoint()
+
+        classGenerator.getJavaClass().dump("$className.class")
+    }
+
+    private fun entryPoint()
+    {
+        methodGenerator = MethodGen(
+            Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt(),
+            BCELType.VOID,
+            arrayOf(ArrayType(BCELType.STRING, 1)),
+            arrayOf("args"),
+            "main",
+            className,
+            instructions,
+            constantPool
+        )
+        factory = InstructionFactory(classGenerator, constantPool)
+
+        code(program.body)
+        instructions.append(InstructionFactory.createReturn(BCELType.VOID))
+
+        methodGenerator.setMaxStack()
+        methodGenerator.setMaxLocals()
+
+        classGenerator.addMethod(methodGenerator.method)
+        instructions.dispose()
     }
 
     private fun code(alg: Algorithm)
@@ -68,7 +96,8 @@ class ByteCode(private val program: Program) {
                 Type.REAL -> instructions.append(factory.createConstant(0.0))
                 Type.TEXT -> instructions.append(factory.createConstant(""))
                 Type.BOOL -> instructions.append(factory.createConstant(false))
-                Type.VOID -> {}
+                Type.VOID -> {
+                }
             }
             instructions.append(InstructionFactory.createStore(ty, lv.index))
         }
@@ -261,11 +290,15 @@ class ByteCode(private val program: Program) {
 
     private fun code(ap: Apply)
     {
+        val els = ap.callee.name.split('.')
+        val base = if (els.size == 2) els[0] else className
+        val name = if (els.size == 2) els[1] else els[0]
+
         ap.arguments.forEach { code(it) }
         val aty = ap.callee.parametersTypes.map { bcelType(it) }
         val inv = factory.createInvoke(
-                className,
-                ap.callee.name,
+                base,
+                name,
                 bcelType(ap.callee.resultType),
                 aty.toTypedArray(),
                 Const.INVOKESTATIC)

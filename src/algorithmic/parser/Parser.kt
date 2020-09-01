@@ -13,21 +13,29 @@ class Parser constructor(private val scanner: Scanner) {
     private val firstExpr = arrayOf(Token.ԹՎԱՅԻՆ, Token.ՏԵՔՍՏԱՅԻՆ, Token.ԱՆՈՒՆ,
             Token.ՁԱԽ_ՓԱԿԱԳԻԾ, Token.ADD, Token.SUB)
 
-    // վերլուծվող ծրագիրը
-    private val program = Program(Paths.get(scanner.filename).fileName.toString())
-
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
-    // սահմանված ալգորիթմներ
+    // սահմանված կամ հայտարարված ալգորիթմների վերնագրերը
     private val signatures = builtIns()
+    // հաջղությամբ վերլուծված ալգորիթմները
+    private val algorithms = arrayListOf<Algorithm>()
 
     // վերլուծել ծրագիրը
     fun parse(): Program
     {
+        match(Token.ԾՐԱԳԻՐ)
+        val name = match(Token.ԱՆՈՒՆ)
+
+        // ալգորիթմների սահմանումների և հայտարարությունների շարք
         while( see(Token.ԱԼԳՈՐԻԹՄ) )
             algorithm()
 
-        return program
+        // պարտադիր կատարվող բլոկ
+        match(Token.ՍԿԻԶԲ)
+        val body = sequence()
+        match(Token.ՎԵՐՋ)
+
+        return Program(name, algorithms, body)
     }
 
     // վերլուծել մեկ ալգորիթմ
@@ -70,7 +78,7 @@ class Parser constructor(private val scanner: Scanner) {
 
         val alg = Algorithm(name, resultType, params, body)
         alg.locals.addAll(symbolTable.filter { !params.contains(it) })
-        program.add(alg)
+        algorithms.add(alg)
     }
 
     // տիպի վերլուծություն
