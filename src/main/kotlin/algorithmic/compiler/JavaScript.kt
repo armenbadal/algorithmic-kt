@@ -1,14 +1,22 @@
 package algorithmic.compiler
 
 import algorithmic.engine.*
+import java.io.File
 import java.lang.StringBuilder
+import java.nio.file.Files
+import java.nio.file.Path
 
 class JavaScript(val program: Program) {
-    fun compile(): String
+
+    fun compile(output: Path)
     {
         val sb = StringBuilder()
         program.algorithms.forEach { sb.append(compile(it)) }
-        return sb.toString()
+
+        val by = compile(program.body)
+        sb.append("(function(){$by})()\n")
+
+        Files.newBufferedWriter(output).use { wr -> wr.write(sb.toString()) }
     }
 
     private fun compile(alg: Algorithm): String

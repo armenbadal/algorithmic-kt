@@ -2,9 +2,10 @@ package algorithmic.parser
 
 import java.lang.StringBuilder
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
-class Scanner constructor(val filename: String) {
+class Scanner constructor(val filePath: Path) {
     private val keywords = mapOf(
             "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
             "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
@@ -41,7 +42,7 @@ class Scanner constructor(val filename: String) {
     )
 
     // ներմուծման հոսք
-    private val input = Files.newBufferedReader(Paths.get(filename))
+    private val input = Files.newBufferedReader(filePath)
     // հերթական սիմվոլը
     private var ch: Char = read()
     // տողի համարը
@@ -102,8 +103,9 @@ class Scanner constructor(val filename: String) {
     {
         val sb = StringBuilder()
 
-        while( ch.isLetterOrDigit() ) {
-            sb.append(ch)
+        while( ch.isLetterOrDigit() || isPunct(ch) ) {
+            if( !isPunct(ch) )
+                sb.append(ch)
             ch = read()
         }
 
@@ -219,6 +221,10 @@ class Scanner constructor(val filename: String) {
 
         return Lexeme(kind, ms.toString(), line)
     }
+
+    // հայկական կետադրական նշաններ
+    private fun isPunct(c: Char) =
+        c == '՞' || c == '՜' || c == '՛'
 
     // կարդալ մեկ նիշ
     private fun read() = input.read().toChar()

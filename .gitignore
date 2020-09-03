@@ -7,5 +7,6 @@
 /gradlew.bat
 
 *.class
+*.js
 *.jar
 

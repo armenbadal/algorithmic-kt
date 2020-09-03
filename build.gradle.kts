@@ -17,6 +17,12 @@ application {
     mainClassName = "algorithmic.main.MainKt"
 }
 
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = application.mainClassName
+    }
+}
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "14"
 }
