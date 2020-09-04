@@ -1,4 +1,4 @@
-package algorithmic.engine
+package algorithmic.ast
 
 class Signature(val name: String, val resultType: Type, val parametersTypes: List<Type>) {
     fun isApplicable(args: List<Expression>): Boolean

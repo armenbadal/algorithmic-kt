@@ -1,4 +1,4 @@
-package algorithmic.engine
+package algorithmic.ast
 
 class Symbol(val id: String, val type: Type) {
     override fun toString(): String =

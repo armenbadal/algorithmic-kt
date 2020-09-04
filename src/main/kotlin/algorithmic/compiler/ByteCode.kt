@@ -1,7 +1,7 @@
 package algorithmic.compiler
 
-import algorithmic.engine.*
-import algorithmic.engine.Type
+import algorithmic.ast.*
+import algorithmic.ast.Type
 import org.apache.bcel.Const
 import org.apache.bcel.generic.*
 

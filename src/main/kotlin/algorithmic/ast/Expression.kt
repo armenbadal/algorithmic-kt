@@ -1,6 +1,4 @@
-package algorithmic.engine
-
-import algorithmic.parser.typeOf
+package algorithmic.ast
 
 // արտահայտությունների բազային դաս
 sealed class Expression(val type: Type)
@@ -46,16 +44,10 @@ enum class Operation(val text: String) {
 }
 
 // ունար գործողություն
-class Unary(val operation: Operation, type: Type, val right: Expression) : Expression(type) {
-    override fun toString(): String =
-        String.format("(%s %s)", operation, right)
-}
+class Unary(val operation: Operation, type: Type, val right: Expression) : Expression(type)
 
 // բինար գործողություն
-class Binary(val operation: Operation, type: Type, val left: Expression, val right: Expression) : Expression(type) {
-    override fun toString(): String =
-        String.format("(%s %s %s)", left, operation, right)
-}
+class Binary(val operation: Operation, type: Type, val left: Expression, val right: Expression) : Expression(type)
 
 // ֆունկցիա ալգորիթմի կանչ
-class Apply(val callee: Signature, val arguments: List<Expression>) : Expression(callee.resultType) {}
+class Apply(val callee: Signature, val arguments: List<Expression>) : Expression(callee.resultType)

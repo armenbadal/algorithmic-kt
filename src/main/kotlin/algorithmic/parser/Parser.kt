@@ -1,7 +1,6 @@
 package algorithmic.parser
 
-import algorithmic.engine.*
-import java.nio.file.Paths
+import algorithmic.ast.*
 
 class Parser constructor(private val scanner: Scanner) {
     // look-a-head սիմվոլը

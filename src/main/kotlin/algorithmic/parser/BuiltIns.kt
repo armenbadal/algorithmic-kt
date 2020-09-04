@@ -1,7 +1,7 @@
 package algorithmic.parser
 
-import algorithmic.engine.Signature
-import algorithmic.engine.Type
+import algorithmic.ast.Signature
+import algorithmic.ast.Type
 
 fun builtIns() =
     mutableMapOf(

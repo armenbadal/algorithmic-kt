@@ -1,7 +1,7 @@
 package algorithmic.parser
 
-import algorithmic.engine.Operation
-import algorithmic.engine.Type
+import algorithmic.ast.Operation
+import algorithmic.ast.Type
 
 fun asType(name: String): Type =
      when( name ) {

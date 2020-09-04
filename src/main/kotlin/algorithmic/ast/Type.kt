@@ -1,8 +1,8 @@
-package algorithmic.engine
+package algorithmic.ast
 
 enum class Type(val text: String) {
     VOID(""),
-    REAL("ԹԻՎ"),
+    REAL("ԻՐԱԿԱՆ"),
     TEXT("ՏԵՔՍՏ"),
     BOOL("ԲՈՒԼՅԱՆ")
 }

@@ -50,6 +50,7 @@ ExpressionList = Expression {',' Expression}.
 Expression = Disjunction.
 Disjunction = Conjunction {'ԿԱՄ' Conjunction}.
 Conjunction = Equality {'ԵՎ' Equality}.
+
 Equality = Comparison [('=' | '<>') Comparison].
 Comparison = Addition [('>' | '>=' | '<' | '<=') Addition].
 Addition = Multiplication {('-' | '+') Multiplication}.
