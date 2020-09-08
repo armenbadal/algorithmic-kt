@@ -318,6 +318,8 @@ class Parser constructor(private val scanner: Scanner) {
             val oper = asOperation(pass())
             val right = addition()
             // տիպերի ստուգում
+            if( left.type == Type.TEXT || right.type == Type.TEXT )
+                throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ՏԵՔՍՏային արժեքներին։", scanner.getLine())
             if( left.type == Type.BOOL || right.type == Type.BOOL )
                 throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
             if( left.type != right.type )

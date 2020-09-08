@@ -1,8 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.0"
     application
+    kotlin("jvm") version "1.4.0"
+    jacoco
 }
 
 repositories {
@@ -11,6 +12,7 @@ repositories {
 
 dependencies {
     implementation("org.apache.bcel:bcel:6.5.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
 }
 
 application {
@@ -25,4 +27,19 @@ tasks.withType<Jar> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "14"
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.isEnabled = true
+        csv.isEnabled = false
+        html.destination = File("${buildDir}/jacoco/html")
+    }
 }

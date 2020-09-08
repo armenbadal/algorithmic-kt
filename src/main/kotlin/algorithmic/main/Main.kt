@@ -17,7 +17,7 @@ fun about()
 
 fun main(args: Array<String>)
 {
-    val argv = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex0.alg")
+    val argv = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex8.alg")
     about()
 
     try {
@@ -26,19 +26,18 @@ fun main(args: Array<String>)
             System.err.println("«$input» ֆայլը գոյություն չունի։")
             return
         }
-        val output = input.resolveSibling(input)
+        val onlyName = input.fileName.toString()
+        val classOutput = input.resolveSibling(onlyName.replaceAfterLast('.', "class"))
+        val jsOutput = input.resolveSibling(onlyName.replaceAfterLast('.', "js"))
 
         val scan = Scanner(input)
         val pars = Parser(scan)
         val ast = pars.parse()
-        JavaScript(ast).compile(output)
-        //ByteCode(ast).compile()
+        JavaScript(ast).compile(jsOutput)
+        ByteCode(ast).compile(classOutput)
     }
     catch(ex: Exception) {
         println(ex)
     }
 }
 
-fun Path.changeExtension(ext: String)
-{
-}

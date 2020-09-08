@@ -27,4 +27,14 @@ public class Algorithmic {
     {
         System.out.println(value);
     }
+
+    public static boolean eq(String x, String y)
+    {
+        return x.equals(y);
+    }
+
+    public static boolean ne(String x, String y)
+    {
+        return !eq(x,y);
+    }
 }
