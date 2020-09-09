@@ -1,5 +1,6 @@
 package algorithmic.parser
 
+@Suppress("NonAsciiCharacters")
 enum class Token {
     ԱՆԾԱՆՈԹ,
 

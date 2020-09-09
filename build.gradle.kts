@@ -38,8 +38,9 @@ tasks.withType<Test> {
 
 tasks.jacocoTestReport {
     reports {
-        xml.isEnabled = true
+        xml.isEnabled = false
         csv.isEnabled = false
+        html.isEnabled = true
         html.destination = File("${buildDir}/jacoco/html")
     }
 }

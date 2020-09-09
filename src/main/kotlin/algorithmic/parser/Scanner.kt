@@ -39,7 +39,7 @@ class Scanner constructor(val filePath: Path) {
             "ԵՒ" to Token.ԵՎ,
             "ԲՈՒԼԵԱՆ" to Token.ԲՈՒԼՅԱՆ,
             "ԱՂԻՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ
-    )
+        )
 
     // ներմուծման հոսք
     private val input = Files.newBufferedReader(filePath)
@@ -71,7 +71,7 @@ class Scanner constructor(val filePath: Path) {
             return textLiteral()
 
         // վերագրում և այլն
-        if( ":=<>+-*/".contains(ch) )
+        if( ":։=<>+-*/".contains(ch) )
             return operation()
 
         return metasymbol()
@@ -156,7 +156,7 @@ class Scanner constructor(val filePath: Path) {
     // գործողություններ
     private fun operation(): Lexeme
     {
-        if( ch == ':' ) {
+        if( ch == ':' || ch == '։' ) {
             ch = read()
             if( ch == '=' ) {
                 ch = read()
@@ -212,7 +212,6 @@ class Scanner constructor(val filePath: Path) {
         val kind = when(ms) {
             '(' -> Token.ՁԱԽ_ՓԱԿԱԳԻԾ
             ')' -> Token.ԱՋ_ՓԱԿԱԳԻԾ
-            ':' -> Token.ՎԵՐՋԱԿԵՏ
             ',' -> Token.ՍՏՈՐԱԿԵՏ
             ';' -> Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ
             else -> Token.ԱՆԾԱՆՈԹ
