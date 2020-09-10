@@ -5,6 +5,7 @@ import algorithmic.ast.Type
 import org.apache.bcel.Const
 import org.apache.bcel.generic.*
 import java.nio.file.Path
+import java.nio.file.Paths
 
 class ByteCode(private val program: Program) {
     // ստեղծվելիք դասի անունը
@@ -19,7 +20,7 @@ class ByteCode(private val program: Program) {
     private val nameIndices = hashMapOf<String, Int>()
 
 
-    fun compile(path: Path)
+    fun compile(place: Path)
     {
         classGenerator = ClassGen(
                 className,
@@ -36,6 +37,7 @@ class ByteCode(private val program: Program) {
         // main մեթոդը
         entryPoint()
 
+        val path = Paths.get(place.toString(), program.name + ".class")
         classGenerator.getJavaClass().dump(path.toString())
     }
 
@@ -206,7 +208,7 @@ class ByteCode(private val program: Program) {
     private fun code(bi: Binary)
     {
         when( bi.operation ) {
-            in Operation.ADD..Operation.DIV -> arithmetic(bi)
+            in Operation.ADD..Operation.MOD -> arithmetic(bi)
             in Operation.EQ..Operation.LE -> comparison(bi)
             in Operation.AND..Operation.OR -> logical(bi)
             else -> {}
@@ -215,9 +217,19 @@ class ByteCode(private val program: Program) {
 
     private fun arithmetic(bi: Binary)
     {
-        code(bi.left)
-        code(bi.right)
-        instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, bcelType(Type.REAL)))
+        if( bi.operation == Operation.MOD ) {
+            code(bi.left)
+            instructions.append(InstructionConst.D2I)
+            code(bi.right)
+            instructions.append(InstructionConst.D2I)
+            instructions.append(InstructionConst.IREM)
+            instructions.append(InstructionConst.I2D)
+        }
+        else {
+            code(bi.left)
+            code(bi.right)
+            instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, bcelType(Type.REAL)))
+        }
     }
 
     private fun comparison(bi: Binary)

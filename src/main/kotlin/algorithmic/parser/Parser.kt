@@ -347,7 +347,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun multiplication(): Expression
     {
         var left = factor()
-        while( see(Token.MUL, Token.DIV) ) {
+        while( see(Token.MUL, Token.DIV, Token.MOD) ) {
             val oper = asOperation(pass())
             val right = factor()
             if( left.type != Type.REAL || right.type != Type.REAL )

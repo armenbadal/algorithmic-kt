@@ -71,7 +71,7 @@ class Scanner constructor(val filePath: Path) {
             return textLiteral()
 
         // վերագրում և այլն
-        if( ":։=<>+-*/".contains(ch) )
+        if( ":։=<>+-*/\\".contains(ch) )
             return operation()
 
         return metasymbol()
@@ -198,6 +198,7 @@ class Scanner constructor(val filePath: Path) {
             '-' -> Token.SUB
             '*' -> Token.MUL
             '/' -> Token.DIV
+            '\\' -> Token.MOD
             else -> Token.ԱՆԾԱՆՈԹ
         }
         ch = read()

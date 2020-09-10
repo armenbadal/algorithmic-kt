@@ -17,6 +17,7 @@ fun asOperation(opn: String): Operation =
         "-" -> Operation.SUB
         "*" -> Operation.MUL
         "/" -> Operation.DIV
+        "\\" -> Operation.MOD
         "=" -> Operation.EQ
         "<>" -> Operation.NE
         ">" -> Operation.GT

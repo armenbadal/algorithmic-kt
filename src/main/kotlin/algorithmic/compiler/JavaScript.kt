@@ -4,10 +4,11 @@ import algorithmic.ast.*
 import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 class JavaScript(val program: Program) {
 
-    fun compile(output: Path)
+    fun compile(place: Path)
     {
         val sb = StringBuilder()
         program.algorithms.forEach { sb.append(compile(it)) }
@@ -15,7 +16,8 @@ class JavaScript(val program: Program) {
         val by = compile(program.body)
         sb.append("(function(){$by})()\n")
 
-        Files.newBufferedWriter(output).use { wr -> wr.write(sb.toString()) }
+        val path = Paths.get(place.toString(), program.name + ".js")
+        Files.newBufferedWriter(path).use { wr -> wr.write(sb.toString()) }
     }
 
     private fun compile(alg: Algorithm): String
@@ -99,6 +101,7 @@ class JavaScript(val program: Program) {
         val op = when(ex.operation.text) {
             "=" -> "=="
             "<>" -> "!="
+            "\\" -> "%"
             else -> ex.operation.text
         }
         return "($ls $op $rs)"

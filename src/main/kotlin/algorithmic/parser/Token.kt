@@ -34,7 +34,7 @@ enum class Token {
 //    AMP, // &
     MUL, // *
     DIV, // /
-//    MOD, // \
+    MOD, // \
 //    POW, // ^
 
     EQ, // =

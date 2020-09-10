@@ -28,6 +28,7 @@ enum class Operation(val text: String) {
     SUB("-"),
     MUL("*"),
     DIV("/"),
+    MOD("\\"),
 
     EQ("="),
     NE("<>"),

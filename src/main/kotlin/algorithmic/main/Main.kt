@@ -17,7 +17,7 @@ fun about()
 
 fun main(args: Array<String>)
 {
-    val argv = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex8.alg")
+    val argv = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex0.alg")
     about()
 
     try {
@@ -26,15 +26,11 @@ fun main(args: Array<String>)
             System.err.println("«$input» ֆայլը գոյություն չունի։")
             return
         }
-        val onlyName = input.fileName.toString()
-        val classOutput = input.resolveSibling(onlyName.replaceAfterLast('.', "class"))
-        val jsOutput = input.resolveSibling(onlyName.replaceAfterLast('.', "js"))
 
         val scan = Scanner(input)
-        val pars = Parser(scan)
-        val ast = pars.parse()
-        JavaScript(ast).compile(jsOutput)
-        ByteCode(ast).compile(classOutput)
+        val ast = Parser(scan).parse()
+        JavaScript(ast).compile(input.parent)
+        ByteCode(ast).compile(input.parent)
     }
     catch(ex: Exception) {
         println(ex)
