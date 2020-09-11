@@ -3,7 +3,20 @@ import java.util.Scanner;
 public class Algorithmic {
     private static Scanner scan = new Scanner(System.in);
 
-    public static Double inputReal(String prompt)
+    public static boolean inputBoolean(String prompt)
+    {
+        var value = inputText(prompt);
+        if( value.equals("ՃԻՇՏ") )
+            return true;
+
+        if( value.equals("ԿԵՂԾ") )
+            return false;
+
+        System.err.println("«" + value + "»-ը ԲՈՒԼՅԱՆ արժեք չէ։");
+        return inputBoolean(prompt);
+    }
+
+    public static double inputReal(String prompt)
     {
         System.out.printf("%s: ", prompt);
         return scan.nextDouble();
@@ -16,6 +29,11 @@ public class Algorithmic {
         while( value.isEmpty() )
             value = scan.nextLine();
         return value;
+    }
+
+    public static void printBoolean(boolean value)
+    {
+        System.out.println(value ? "ՃԻՇՏ" : "ԿԵՂԾ");
     }
 
     public static void printReal(double value)

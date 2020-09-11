@@ -101,6 +101,8 @@ class ByteCode(private val program: Program) {
 
         // մեթոդի մարմինը
         code(alg.body)
+        if( alg.returnType == Type.VOID )
+            instructions.append(InstructionFactory.createReturn(bcelType(Type.VOID)))
 
         methodGenerator.setMaxStack()
         methodGenerator.setMaxLocals()
@@ -236,23 +238,34 @@ class ByteCode(private val program: Program) {
     {
         code(bi.left)
         code(bi.right)
-        instructions.append(InstructionConst.DCMPL)
 
-        val opcode = when( bi.operation ) {
-            Operation.EQ -> Const.IFNE
-            Operation.NE -> Const.IFEQ
-            Operation.GT -> Const.IFLE
-            Operation.GE -> Const.IFLT
-            Operation.LT -> Const.IFGE
-            Operation.LE -> Const.IFGT
-            else -> 0
+        if (bi.left.type == Type.TEXT && bi.right.type == Type.TEXT) {
+            val inv = factory.createInvoke(
+                    "Algorithmic",
+                    if( bi.operation == Operation.EQ ) "eq" else "ne",
+                    bcelType(Type.BOOL),
+                    arrayOf(bcelType(Type.TEXT), bcelType(Type.TEXT)),
+                    Const.INVOKESTATIC)
+            instructions.append(inv)
         }
+        else {
+            instructions.append(InstructionConst.DCMPL)
+            val opcode = when (bi.operation) {
+                Operation.EQ -> Const.IFNE
+                Operation.NE -> Const.IFEQ
+                Operation.GT -> Const.IFLE
+                Operation.GE -> Const.IFLT
+                Operation.LT -> Const.IFGE
+                Operation.LE -> Const.IFGT
+                else -> 0
+            }
 
-        val bri = instructions.append(createIfJump(opcode))
-        instructions.append(factory.createConstant(1))
-        val go = instructions.append(createGoto(null))
-        bri.target = instructions.append(factory.createConstant(0))
-        go.target = instructions.append(createNop())
+            val bri = instructions.append(createIfJump(opcode))
+            instructions.append(factory.createConstant(1))
+            val go = instructions.append(createGoto(null))
+            bri.target = instructions.append(factory.createConstant(0))
+            go.target = instructions.append(createNop())
+        }
     }
 
     private fun logical(bi: Binary)

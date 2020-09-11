@@ -14,7 +14,7 @@ class JavaScript(val program: Program) {
         program.algorithms.forEach { sb.append(compile(it)) }
 
         val by = compile(program.body)
-        sb.append("(function(){$by})()\n")
+        sb.append("(function(){$by;})()\n")
 
         val path = Paths.get(place.toString(), program.name + ".js")
         Files.newBufferedWriter(path).use { wr -> wr.write(sb.toString()) }
@@ -25,10 +25,10 @@ class JavaScript(val program: Program) {
         val sb = StringBuilder()
         val pars = alg.parameters.joinToString { it.id }
         sb.append("const ${alg.name} = function($pars) {\n")
-        sb.append(alg.locals.joinToString("\n") { compile(it) })
-        sb.append('\n')
+        sb.append(alg.locals.joinToString(";\n") { compile(it) })
+        sb.append(";\n")
         sb.append(compile(alg.body))
-        sb.append("\n}\n")
+        sb.append(";\n}\n")
         return sb.toString()
     }
 
@@ -44,7 +44,7 @@ class JavaScript(val program: Program) {
 
     private fun compile(seq: Sequence): String
     {
-        return seq.items.joinToString("\n") { compile(it) }
+        return seq.items.joinToString(";\n") { compile(it) }
     }
 
     private fun compile(asg: Assignment): String

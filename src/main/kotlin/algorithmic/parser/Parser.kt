@@ -30,9 +30,9 @@ class Parser constructor(private val scanner: Scanner) {
             algorithm()
 
         // պարտադիր կատարվող բլոկ
-        match(Token.ՍԿԻԶԲ)
+        match(Token.ԿԱՏԱՐԵԼ)
         val body = sequence()
-        match(Token.ՎԵՐՋ)
+        match(Token.ԱՎԱՐՏ)
 
         return Program(name, algorithms, body)
     }

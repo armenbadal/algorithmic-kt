@@ -9,6 +9,7 @@ class Scanner constructor(val filePath: Path) {
     private val keywords = mapOf(
             "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
             "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
+            "ԿԱՏԱՐԵԼ" to Token.ԿԱՏԱՐԵԼ,
             "ԱԼԳՈՐԻԹՄ" to Token.ԱԼԳՈՐԻԹՄ,
             "ՍՏՈՐԵՎ" to Token.ՍՏՈՐԵՎ,
             "ՍԿԻԶԲ" to Token.ՍԿԻԶԲ,

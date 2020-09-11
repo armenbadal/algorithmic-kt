@@ -17,11 +17,11 @@ fun about()
 
 fun main(args: Array<String>)
 {
-    val argv = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex0.alg")
+    val args = arrayOf("c:\\projects\\algorithmic-kt\\cases\\Ողջույններ.ալգ")
     about()
 
     try {
-        val input = Paths.get(argv[0])
+        val input = Paths.get(args[0]).toAbsolutePath()
         if( Files.notExists(input) ) {
             System.err.println("«$input» ֆայլը գոյություն չունի։")
             return
