@@ -17,7 +17,7 @@ fun about()
 
 fun main(args: Array<String>)
 {
-    val args = arrayOf("c:\\projects\\algorithmic-kt\\cases\\Ողջույններ.ալգ")
+    val args = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex10.alg")
     about()
 
     try {
