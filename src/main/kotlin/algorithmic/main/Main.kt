@@ -1,11 +1,9 @@
 package algorithmic.main
 
 import algorithmic.compiler.ByteCode
-import algorithmic.compiler.JavaScript
 import algorithmic.parser.Parser
 import algorithmic.parser.Scanner
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 const val version = "0.0.1"
@@ -17,7 +15,7 @@ fun about()
 
 fun main(args: Array<String>)
 {
-    val args = arrayOf("c:\\projects\\algorithmic-kt\\cases\\ex10.alg")
+    //val args = arrayOf("cases/ex10.alg")
     about()
 
     try {
@@ -27,13 +25,11 @@ fun main(args: Array<String>)
             return
         }
 
-        val scan = Scanner(input)
-        val ast = Parser(scan).parse()
-        JavaScript(ast).compile(input.parent)
+        val ast = Parser(Scanner(input)).parse()
         ByteCode(ast).compile(input.parent)
     }
     catch(ex: Exception) {
-        println(ex)
+        System.err.println(ex)
     }
 }
 
