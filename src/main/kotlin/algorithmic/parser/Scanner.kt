@@ -3,9 +3,9 @@ package algorithmic.parser
 import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
-class Scanner constructor(val filePath: Path) {
+class Scanner constructor(filePath: Path) {
+    // ծառայողական բառերի համապատասխանեցումը պիտակներին
     private val keywords = mapOf(
             "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
             "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
@@ -157,6 +157,7 @@ class Scanner constructor(val filePath: Path) {
     // գործողություններ
     private fun operation(): Lexeme
     {
+        // վերագրում կամ վերջակետ
         if( ch == ':' || ch == '։' ) {
             ch = read()
             if( ch == '=' ) {
@@ -166,11 +167,13 @@ class Scanner constructor(val filePath: Path) {
             return Lexeme(Token.ՎԵՐՋԱԿԵՏ, ":", line)
         }
 
+        // հավասարություն
         if( ch == '=' ) {
             ch = read()
             return Lexeme(Token.EQ, "=", line)
         }
 
+        // փոքր է, փոքր է կամ հավասար, հավասար չէ
         if( ch == '<' ) {
             ch = read()
             if( ch == '>' ) {
@@ -184,6 +187,7 @@ class Scanner constructor(val filePath: Path) {
             return Lexeme(Token.LT, "<", line)
         }
 
+        // մեծ է, մեծ է կամ հավասար
         if( ch == '>' ) {
             ch = read()
             if( ch == '=' ) {
@@ -193,6 +197,7 @@ class Scanner constructor(val filePath: Path) {
             return Lexeme(Token.GT, ">", line)
         }
 
+        // գումարում, հանում, բաժանում, բազմապատկում, մնացորդ
         val ms = ch
         val tok = when( ms ) {
             '+' -> Token.ADD

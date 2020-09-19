@@ -4,24 +4,16 @@ package algorithmic.ast
 sealed class Expression(val type: Type)
 
 // թվային հաստատուն
-class Numeric(val value: Double) : Expression(Type.REAL) {
-    override fun toString(): String = value.toString()
-}
+class Numeric(val value: Double) : Expression(Type.REAL)
 
 // տեքստային հաստատուն
-class Text(val value: String) : Expression(Type.TEXT) {
-    override fun toString(): String = value
-}
+class Text(val value: String) : Expression(Type.TEXT)
 
 // տրամաբանական
-class Logical(val value: String) : Expression(Type.BOOL) {
-    override fun toString(): String = value
-}
+class Logical(val value: String) : Expression(Type.BOOL)
 
 // փոփոխական
-class Variable(val sym: Symbol) : Expression(sym.type) {
-    override fun toString(): String = sym.id
-}
+class Variable(val sym: Symbol) : Expression(sym.type)
 
 enum class Operation(val text: String) {
     ADD("+"),

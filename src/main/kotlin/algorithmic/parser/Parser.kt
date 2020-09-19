@@ -9,14 +9,16 @@ class Parser constructor(private val scanner: Scanner) {
     // հրամանների FIRST բազմությունը
     private val firstStat = arrayOf(Token.ԱՆՈՒՆ, Token.ԵԹԵ, Token.ՔԱՆԻ, Token.ԱՐԴՅՈՒՆՔ)
     // արտահայտությունների FIRST բազմությունը
-    private val firstExpr = arrayOf(Token.ԹՎԱՅԻՆ, Token.ՏԵՔՍՏԱՅԻՆ, Token.ԱՆՈՒՆ,
-            Token.ՁԱԽ_ՓԱԿԱԳԻԾ, Token.ADD, Token.SUB)
+    private val firstExpr = arrayOf(Token.ԹՎԱՅԻՆ, Token.ՏԵՔՍՏԱՅԻՆ,
+            Token.ԱՆՈՒՆ, Token.ՁԱԽ_ՓԱԿԱԳԻԾ, Token.ADD, Token.SUB)
 
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
+    // ընթացիկ վերլուծվող ալգորիթմը
+    private var current: String = ""
     // սահմանված կամ հայտարարված ալգորիթմների վերնագրերը
     private val signatures = builtIns()
-    // հաջղությամբ վերլուծված ալգորիթմները
+    // հաջողությամբ վերլուծված ալգորիթմները
     private val algorithms = arrayListOf<Algorithm>()
 
     // վերլուծել ծրագիրը
@@ -57,8 +59,8 @@ class Parser constructor(private val scanner: Scanner) {
         val params = symbolTable.map { it }
 
         // ստեղծել նոր ալգորիթմի նկարագրությունը
-        val sig = Signature(name, resultType, params.map { it.type })
-        signatures[name] = sig
+        signatures[name] = Signature(name, resultType, params.map { it.type })
+        current = name
 
         // երբ սա պարզապես հայտարարություն է
         if( see(Token.ՍՏՈՐԵՎ) ) {
@@ -254,11 +256,15 @@ class Parser constructor(private val scanner: Scanner) {
     // արդյունք
     private fun result(): Statement
     {
-//        if( signatures.last().resultType == Type.VOID )
-//            throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
+        val expType = signatures.getValue(current).resultType
+
+        if( expType == Type.VOID )
+            throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
 
         match(Token.ԱՐԴՅՈՒՆՔ)
         val value = expression()
+        if( value.type != expType )
+            throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ ${expType.text} tipi ar=eq", scanner.getLine())
         return Result(value)
     }
 
@@ -423,6 +429,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun see(vararg exps: Token): Boolean =
         exps.contains(lookahead.token)
 
+    // կարդալ հաջորդ լեքսեմը և վերադարձնել նախորդի արժեքը
     private fun pass(): String
     {
         val lex = lookahead.value
@@ -442,10 +449,10 @@ class Parser constructor(private val scanner: Scanner) {
     // որոնել սիմվոլների աղյուսակում
     private fun lookup(name: String): Symbol
     {
-        for( sym in symbolTable )
-            if( sym.id == name )
-                return sym
-
-        throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
+//        for( sym in symbolTable )
+//            if( sym.id == name )
+//                return sym
+        return symbolTable.find { it.id == name } ?:
+            throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
     }
 }
