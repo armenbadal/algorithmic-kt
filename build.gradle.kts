@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     implementation("org.apache.bcel:bcel:6.5.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
 
 application {
@@ -27,6 +27,10 @@ tasks.withType<Jar> {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "14"
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
 }
 
 tasks.withType<Test> {

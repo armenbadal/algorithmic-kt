@@ -85,7 +85,7 @@ class ScannerTests {
                 "￿" to Token.ԱՆԾԱՆՈԹ
             )
 
-        val ph = Paths.get("src", "test", "resources", "scanner-data.txt")
+        val ph = Paths.get("src", "test", "resources", "scanner-data.txt").toAbsolutePath()
         Files.newBufferedWriter(ph).use {
             wr -> wr.write("{ Մեկնաբանություն }")
                 wr.newLine()

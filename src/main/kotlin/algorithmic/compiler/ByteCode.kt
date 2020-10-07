@@ -30,13 +30,15 @@ class ByteCode(private val program: Program) {
 
     fun compile(place: Path)
     {
+        // դասը գեներացնող օբյեկտը
         classGenerator = ClassGen(
-                className,
-                "java.lang.Object",
-                "<generated>",
-                Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt(),
-                arrayOf())
+                className, // անունը
+                "java.lang.Object", // բազային դասը
+                "<generated>", // սկզբնական կոդի ֆայլի անունը
+                Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt(), // հասանելիությունը
+                arrayOf()) // իրականացվոած ինտերֆեյսների ցուցակը
         constantPool = classGenerator.constantPool
+        factory = InstructionFactory(classGenerator, constantPool)
         instructions = InstructionList()
 
         // գեներացնել ալգորիթմների կոդը
@@ -46,7 +48,7 @@ class ByteCode(private val program: Program) {
         entryPoint()
 
         val path = Paths.get(place.toString(), program.name + ".class")
-        classGenerator.getJavaClass().dump(path.toString())
+        classGenerator.javaClass.dump(path.toString())
     }
 
     private fun entryPoint()
@@ -59,9 +61,7 @@ class ByteCode(private val program: Program) {
             "main",
             className,
             instructions,
-            constantPool
-        )
-        factory = InstructionFactory(classGenerator, constantPool)
+            constantPool)
 
         code(program.body)
         instructions.append(InstructionFactory.createReturn(bcelType[Type.VOID]))
@@ -91,15 +91,14 @@ class ByteCode(private val program: Program) {
         val parNames = alg.parameters.map { it.id }
         // մեթոդը կառուցող օբյեկտ
         methodGenerator = MethodGen(
-                accessFlags,
-                bcelType[alg.returnType],
-                parTypes.toTypedArray(),
-                parNames.toTypedArray(),
-                alg.name,
-                className,
-                instructions,
-                constantPool)
-        factory = InstructionFactory(classGenerator, constantPool)
+            accessFlags,
+            bcelType[alg.returnType],
+            parTypes.toTypedArray(),
+            parNames.toTypedArray(),
+            alg.name,
+            className,
+            instructions,
+            constantPool)
 
         // վերցնել մեթոդի պարամետրերի ինդեքսները
         nameIndices.clear()
