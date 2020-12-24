@@ -31,7 +31,7 @@ class Signature(val name: String, val resultType: Type, val parametersTypes: Lis
     }
 
     override fun toString(): String =
-        parametersTypes.joinToString(" × ") { it.text }
+        parametersTypes.joinToString(" × ") { it.toString() }
 }
 
 

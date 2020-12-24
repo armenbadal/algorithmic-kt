@@ -1,6 +1,7 @@
 package algorithmic.compiler
 
 import algorithmic.ast.*
+import algorithmic.ast.Array
 import algorithmic.ast.Type
 import org.apache.bcel.Const
 import org.apache.bcel.generic.*
@@ -18,15 +19,6 @@ class ByteCode(private val program: Program) {
 
     private lateinit var methodGenerator: MethodGen
     private val nameIndices = hashMapOf<String, Int>()
-
-    // Ալգորիթմական լեզվի տիպերի արտապատկերումը BCEL տիպերին։
-    private val bcelType = mapOf(
-        Type.VOID to org.apache.bcel.generic.Type.VOID,
-        Type.TEXT to org.apache.bcel.generic.Type.STRING,
-        Type.REAL to org.apache.bcel.generic.Type.DOUBLE,
-        Type.BOOL to org.apache.bcel.generic.Type.BOOLEAN
-    )
-
 
     fun compile(place: Path)
     {
@@ -55,8 +47,8 @@ class ByteCode(private val program: Program) {
     {
         methodGenerator = MethodGen(
             Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt(),
-            bcelType[Type.VOID],
-            arrayOf(ArrayType(bcelType[Type.TEXT], 1)),
+            toBcelType(VOID),
+            arrayOf(ArrayType(toBcelType(Scalar.TEXT), 1)),
             arrayOf("args"),
             "main",
             className,
@@ -64,7 +56,7 @@ class ByteCode(private val program: Program) {
             constantPool)
 
         code(program.body)
-        instructions.append(InstructionFactory.createReturn(bcelType[Type.VOID]))
+        instructions.append(InstructionFactory.createReturn(toBcelType(VOID)))
 
         methodGenerator.setMaxStack()
         methodGenerator.setMaxLocals()
@@ -86,13 +78,13 @@ class ByteCode(private val program: Program) {
         // հասանելիության որոշումը՝ public static
         val accessFlags = Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt()
         // պարամետրերի տիպերի ցուցակը
-        val parTypes = alg.parameters.map { bcelType[it.type] }
+        val parTypes = alg.parameters.map { toBcelType(it.type) }
         // պարամետրերի անունների ցուցակը
         val parNames = alg.parameters.map { it.id }
         // մեթոդը կառուցող օբյեկտ
         methodGenerator = MethodGen(
             accessFlags,
-            bcelType[alg.returnType],
+            toBcelType(alg.returnType),
             parTypes.toTypedArray(),
             parNames.toTypedArray(),
             alg.name,
@@ -106,22 +98,22 @@ class ByteCode(private val program: Program) {
 
         // հայտարարել լոկալ փոփոխականները և վերագրել լռելության արժեքները
         for( vr in alg.locals ) {
-            val ty = bcelType[vr.type]
+            val ty = toBcelType(vr.type)
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
             nameIndices[vr.id] = lv.index
             when( vr.type ) {
-                Type.REAL -> instructions.append(factory.createConstant(0.0))
-                Type.TEXT -> instructions.append(factory.createConstant(""))
-                Type.BOOL -> instructions.append(factory.createConstant(false))
-                Type.VOID -> {}
+                Scalar.REAL -> instructions.append(factory.createConstant(0.0))
+                Scalar.TEXT -> instructions.append(factory.createConstant(""))
+                Scalar.BOOL -> instructions.append(factory.createConstant(false))
+                VOID -> {}
             }
             instructions.append(InstructionFactory.createStore(ty, lv.index))
         }
 
         // մեթոդի մարմինը
         code(alg.body)
-        if( alg.returnType == Type.VOID )
-            instructions.append(InstructionFactory.createReturn(bcelType[Type.VOID]))
+        if( alg.returnType == VOID )
+            instructions.append(InstructionFactory.createReturn(toBcelType(VOID)))
 
         methodGenerator.setMaxStack()
         methodGenerator.setMaxLocals()
@@ -152,7 +144,7 @@ class ByteCode(private val program: Program) {
     {
         code(asg.value)
         val ix = nameIndices[asg.sym.id]!!
-        instructions.append(InstructionFactory.createStore(bcelType[asg.sym.type], ix))
+        instructions.append(InstructionFactory.createStore(toBcelType(asg.sym.type), ix))
     }
 
     private fun code(bra: Branching)
@@ -226,7 +218,7 @@ class ByteCode(private val program: Program) {
     private fun code(rs: Result)
     {
         code(rs.value)
-        instructions.append(InstructionFactory.createReturn(bcelType[rs.value.type]))
+        instructions.append(InstructionFactory.createReturn(toBcelType(rs.value.type)))
     }
 
     /**
@@ -273,7 +265,7 @@ class ByteCode(private val program: Program) {
         else {
             code(bi.left)
             code(bi.right)
-            instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, bcelType[Type.REAL]))
+            instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, toBcelType(Scalar.REAL)))
         }
     }
 
@@ -282,12 +274,12 @@ class ByteCode(private val program: Program) {
         code(bi.left)
         code(bi.right)
 
-        if (bi.left.type == Type.TEXT && bi.right.type == Type.TEXT) {
+        if (bi.left.type == Scalar.TEXT && bi.right.type == Scalar.TEXT) {
             val inv = factory.createInvoke(
                     "Algorithmic",
                     if( bi.operation == Operation.EQ ) "eq" else "ne",
-                    bcelType[Type.BOOL],
-                    arrayOf(bcelType[Type.TEXT], bcelType[Type.TEXT]),
+                    toBcelType(Scalar.BOOL),
+                    arrayOf(toBcelType(Scalar.TEXT), toBcelType(Scalar.TEXT)),
                     Const.INVOKESTATIC)
             instructions.append(inv)
         }
@@ -358,11 +350,11 @@ class ByteCode(private val program: Program) {
         val name = if (els.size == 2) els[1] else els[0]
 
         ap.arguments.forEach { code(it) }
-        val aty = ap.callee.parametersTypes.map { bcelType[it] }
+        val aty = ap.callee.parametersTypes.map { toBcelType(it) }
         val inv = factory.createInvoke(
                 base,
                 name,
-                bcelType[ap.callee.resultType],
+                toBcelType(ap.callee.resultType),
                 aty.toTypedArray(),
                 Const.INVOKESTATIC)
         instructions.append(inv)
@@ -386,7 +378,7 @@ class ByteCode(private val program: Program) {
     private fun code(vr: Variable)
     {
         val ix = nameIndices[vr.sym.id]!!
-        instructions.append(InstructionFactory.createLoad(bcelType[vr.sym.type], ix))
+        instructions.append(InstructionFactory.createLoad(toBcelType(vr.sym.type), ix))
     }
 
     private fun createGoto(target: InstructionHandle?) =
@@ -396,5 +388,22 @@ class ByteCode(private val program: Program) {
         InstructionFactory.createBranchInstruction(opcode, null)
 
     private fun createNop() =
-        InstructionFactory.createNull(bcelType[Type.VOID])
+        InstructionFactory.createNull(toBcelType(VOID))
+
+    // Ալգորիթմական լեզվի տիպերի արտապատկերումը BCEL տիպերին։
+    private fun toBcelType(et: Type): org.apache.bcel.generic.Type
+    {
+        if (et is Scalar)
+            return when (et) {
+                Scalar.TEXT -> org.apache.bcel.generic.Type.STRING
+                Scalar.REAL -> org.apache.bcel.generic.Type.DOUBLE
+                Scalar.BOOL -> org.apache.bcel.generic.Type.BOOLEAN
+            }
+
+        if (et is Array) {
+            //
+        }
+
+        return org.apache.bcel.generic.Type.VOID
+    }
 }

@@ -4,13 +4,13 @@ package algorithmic.ast
 sealed class Expression(val type: Type)
 
 // թվային հաստատուն
-class Numeric(val value: Double) : Expression(Type.REAL)
+class Numeric(val value: Double) : Expression(Scalar.REAL)
 
 // տեքստային հաստատուն
-class Text(val value: String) : Expression(Type.TEXT)
+class Text(val value: String) : Expression(Scalar.TEXT)
 
 // տրամաբանական
-class Logical(val value: String) : Expression(Type.BOOL)
+class Logical(val value: String) : Expression(Scalar.BOOL)
 
 // փոփոխական
 class Variable(val sym: Symbol) : Expression(sym.type)
@@ -31,7 +31,9 @@ enum class Operation(val text: String) {
 
     AND("ԵՎ"),
     OR("ԿԱՄ"),
-    NOT("ՈՉ");
+    NOT("ՈՉ"),
+
+    INDEX("[]");
 
     override fun toString(): String = text
 }

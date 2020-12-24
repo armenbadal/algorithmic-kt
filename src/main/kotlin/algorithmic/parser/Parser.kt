@@ -95,7 +95,7 @@ class Parser constructor(private val scanner: Scanner) {
             return asType(pass())
 
         if( opt )
-            return Type.VOID
+            return VOID
 
         throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
@@ -258,13 +258,13 @@ class Parser constructor(private val scanner: Scanner) {
     {
         val expType = signatures.getValue(current).resultType
 
-        if( expType == Type.VOID )
+        if( expType == VOID )
             throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
 
         match(Token.ԱՐԴՅՈՒՆՔ)
         val value = expression()
         if( value.type != expType )
-            throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ ${expType.text} tipi ar=eq", scanner.getLine())
+            throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ ${expType} tipi ar=eq", scanner.getLine())
         return Result(value)
     }
 
@@ -280,9 +280,9 @@ class Parser constructor(private val scanner: Scanner) {
             pass()
             val oper = asOperation("ԿԱՄ")
             val right = conjunction()
-            if( left.type != Type.BOOL || right.type != Type.BOOL )
+            if( left.type != Scalar.BOOL || right.type != Scalar.BOOL )
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
-            left = Binary(oper, Type.BOOL, left, right)
+            left = Binary(oper, Scalar.BOOL, left, right)
         }
         return left
     }
@@ -295,9 +295,9 @@ class Parser constructor(private val scanner: Scanner) {
             pass()
             val oper = asOperation("ԵՎ")
             val right = equality()
-            if( left.type != Type.BOOL || right.type != Type.BOOL )
+            if( left.type != Scalar.BOOL || right.type != Scalar.BOOL )
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
-            left = Binary(oper, Type.BOOL, left, right)
+            left = Binary(oper, Scalar.BOOL, left, right)
         }
         return left
     }
@@ -311,7 +311,7 @@ class Parser constructor(private val scanner: Scanner) {
             val right = comparison()
             if( left.type != right.type )
                 throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
-            left = Binary(oper, Type.BOOL, left, right)
+            left = Binary(oper, Scalar.BOOL, left, right)
         }
         return left
     }
@@ -324,13 +324,13 @@ class Parser constructor(private val scanner: Scanner) {
             val oper = asOperation(pass())
             val right = addition()
             // տիպերի ստուգում
-            if( left.type == Type.TEXT || right.type == Type.TEXT )
+            if( left.type == Scalar.TEXT || right.type == Scalar.TEXT )
                 throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ՏԵՔՍՏային արժեքներին։", scanner.getLine())
-            if( left.type == Type.BOOL || right.type == Type.BOOL )
+            if( left.type == Scalar.BOOL || right.type == Scalar.BOOL )
                 throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
             if( left.type != right.type )
                 throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
-            left = Binary(oper, Type.BOOL, left, right)
+            left = Binary(oper, Scalar.BOOL, left, right)
         }
         return left
     }
@@ -342,9 +342,9 @@ class Parser constructor(private val scanner: Scanner) {
         while( see(Token.ADD, Token.SUB) ) {
             val oper = asOperation(pass())
             val right = multiplication()
-            if( left.type != Type.REAL || right.type != Type.REAL )
+            if( left.type != Scalar.REAL || right.type != Scalar.REAL )
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
-            left = Binary(oper, Type.REAL, left, right)
+            left = Binary(oper, Scalar.REAL, left, right)
         }
         return left
     }
@@ -356,9 +356,9 @@ class Parser constructor(private val scanner: Scanner) {
         while( see(Token.MUL, Token.DIV, Token.MOD) ) {
             val oper = asOperation(pass())
             val right = factor()
-            if( left.type != Type.REAL || right.type != Type.REAL )
+            if( left.type != Scalar.REAL || right.type != Scalar.REAL )
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
-            left = Binary(oper, Type.REAL, left, right)
+            left = Binary(oper, Scalar.REAL, left, right)
         }
         return left
     }
@@ -378,6 +378,13 @@ class Parser constructor(private val scanner: Scanner) {
                 val name = pass()
                 if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
                     apply(name)
+                else if( see(Token.ՁԱԽ_ԻՆԴԵՔՍ) ) {
+                    pass()
+                    val inx = expression()
+                    match(Token.ԱՋ_ԻՆԴԵՔՍ)
+                    val sa = lookup(name)
+                    Binary(Operation.INDEX, sa.type, Variable(sa), inx)
+                }
                 else
                     Variable(lookup(name))
             }
@@ -389,9 +396,9 @@ class Parser constructor(private val scanner: Scanner) {
                 val oper = asOperation(pass())
                 val right = factor()
                 // տիպերի ստուգում
-                if( oper == Operation.NOT && right.type != Type.BOOL )
+                if( oper == Operation.NOT && right.type != Scalar.BOOL )
                     throw TypeError("«ՈՉ» գործողությունը կիրառելի է միայն ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
-                if( (oper == Operation.SUB || oper == Operation.ADD) && right.type != Type.REAL )
+                if( (oper == Operation.SUB || oper == Operation.ADD) && right.type != Scalar.REAL )
                     throw TypeError("«${oper.text}» գործողությունը կիրառելի է միայն ԻՐԱԿԱՆ արժեքներին։", scanner.getLine())
                 Unary(oper, right.type, right)
             }
