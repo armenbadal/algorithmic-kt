@@ -1,13 +1,14 @@
 package algorithmic.parser
 
 import algorithmic.ast.Operation
+import algorithmic.ast.Scalar
 import algorithmic.ast.Type
 
 fun asType(name: String): Type =
      when( name ) {
-         "ԲՈՒԼՅԱՆ" -> Type.BOOL
-         "ԻՐԱԿԱՆ" -> Type.REAL
-         "ՏԵՔՍՏ" -> Type.TEXT
+         "ԲՈՒԼՅԱՆ" -> Scalar.BOOL
+         "ԻՐԱԿԱՆ" -> Scalar.REAL
+         "ՏԵՔՍՏ" -> Scalar.TEXT
          else -> throw ParseError("Անծանոթ տիպ «$name»։", 0)
     }
 
