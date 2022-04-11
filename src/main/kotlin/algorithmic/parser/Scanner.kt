@@ -40,39 +40,40 @@ class Scanner constructor(filePath: Path) {
             "ԵՒ" to Token.ԵՎ,
             "ԲՈՒԼԵԱՆ" to Token.ԲՈՒԼՅԱՆ,
             "ԱՂԻՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ
-        )
+    )
 
     // ներմուծման հոսք
     private val input = Files.newBufferedReader(filePath)
+
     // հերթական սիմվոլը
     private var ch: Char = read()
+
     // տողի համարը
     private var line: Int = 1
 
     //
-    fun next(): Lexeme
-    {
-        if( !input.ready() )
+    fun next(): Lexeme {
+        if (!input.ready())
             return Lexeme(Token.ՖԱՅԼԻ_ՎԵՐՋ, "<ՖԱՅԼԻ ՎԵՐՋ>", line)
 
         whitespaces()
 
-        if( ch == '{' ) {
+        if (ch == '{') {
             comment()
             return next()
         }
 
-        if( ch.isLetter() )
+        if (ch.isLetter())
             return keywordOrIdentifier()
 
-        if( ch.isDigit() )
+        if (ch.isDigit())
             return numericLiteral()
 
-        if( ch == '"' || ch == '«' )
+        if (ch == '"' || ch == '«')
             return textLiteral()
 
         // վերագրում և այլն
-        if( ":։=<>+-*/\\".contains(ch) )
+        if (":։=<>+-*/\\".contains(ch))
             return operation()
 
         return metasymbol()
@@ -82,30 +83,27 @@ class Scanner constructor(filePath: Path) {
     fun getLine(): Int = line
 
     // անտեսել բացատները
-    private fun whitespaces()
-    {
-        while( ch.isWhitespace() || ch == '|' ) {
-            if( ch == '\n' )
+    private fun whitespaces() {
+        while (ch.isWhitespace() || ch == '|') {
+            if (ch == '\n')
                 ++line
             ch = read()
         }
     }
 
     // մեկնաբանություն
-    private fun comment()
-    {
-        while( ch != '}' )
+    private fun comment() {
+        while (ch != '}')
             ch = read()
         ch = read()
     }
 
     // ծառայողական բառ կամ անուն
-    private fun keywordOrIdentifier(): Lexeme
-    {
+    private fun keywordOrIdentifier(): Lexeme {
         val sb = StringBuilder()
 
-        while( ch.isLetterOrDigit() || isPunct(ch) ) {
-            if( !isPunct(ch) )
+        while (ch.isLetterOrDigit() || isPunct(ch)) {
+            if (!isPunct(ch))
                 sb.append(ch)
             ch = read()
         }
@@ -116,18 +114,17 @@ class Scanner constructor(filePath: Path) {
     }
 
     // թվային լիտերալ
-    private fun numericLiteral(): Lexeme
-    {
+    private fun numericLiteral(): Lexeme {
         val sb = StringBuilder()
 
-        while( ch.isDigit() ) {
+        while (ch.isDigit()) {
             sb.append(ch)
             ch = read()
         }
-        if( ch == '.' ) {
+        if (ch == '.') {
             sb.append('.')
             ch = read()
-            while( ch.isDigit() ) {
+            while (ch.isDigit()) {
                 sb.append(ch)
                 ch = read()
             }
@@ -138,13 +135,12 @@ class Scanner constructor(filePath: Path) {
     }
 
     // տեքստային լիտերալ
-    private fun textLiteral(): Lexeme
-    {
+    private fun textLiteral(): Lexeme {
         val sb = StringBuilder()
 
-        val end = if( ch == '«' ) '»' else '"'
+        val end = if (ch == '«') '»' else '"'
         ch = read()
-        while( ch != end ) {
+        while (ch != end) {
             sb.append(ch)
             ch = read()
         }
@@ -155,12 +151,11 @@ class Scanner constructor(filePath: Path) {
     }
 
     // գործողություններ
-    private fun operation(): Lexeme
-    {
+    private fun operation(): Lexeme {
         // վերագրում կամ վերջակետ
-        if( ch == ':' || ch == '։' ) {
+        if (ch == ':' || ch == '։') {
             ch = read()
-            if( ch == '=' ) {
+            if (ch == '=') {
                 ch = read()
                 return Lexeme(Token.ՎԵՐԱԳՐԵԼ, ":=", line)
             }
@@ -168,19 +163,18 @@ class Scanner constructor(filePath: Path) {
         }
 
         // հավասարություն
-        if( ch == '=' ) {
+        if (ch == '=') {
             ch = read()
             return Lexeme(Token.EQ, "=", line)
         }
 
         // փոքր է, փոքր է կամ հավասար, հավասար չէ
-        if( ch == '<' ) {
+        if (ch == '<') {
             ch = read()
-            if( ch == '>' ) {
+            if (ch == '>') {
                 ch = read()
                 return Lexeme(Token.NE, "<>", line)
-            }
-            else if( ch == '=' ) {
+            } else if (ch == '=') {
                 ch = read()
                 return Lexeme(Token.LE, "<=", line)
             }
@@ -188,9 +182,9 @@ class Scanner constructor(filePath: Path) {
         }
 
         // մեծ է, մեծ է կամ հավասար
-        if( ch == '>' ) {
+        if (ch == '>') {
             ch = read()
-            if( ch == '=' ) {
+            if (ch == '=') {
                 ch = read()
                 return Lexeme(Token.GE, ">=", line)
             }
@@ -199,7 +193,7 @@ class Scanner constructor(filePath: Path) {
 
         // գումարում, հանում, բաժանում, բազմապատկում, մնացորդ
         val ms = ch
-        val tok = when( ms ) {
+        val tok = when (ms) {
             '+' -> Token.ADD
             '-' -> Token.SUB
             '*' -> Token.MUL
@@ -213,10 +207,9 @@ class Scanner constructor(filePath: Path) {
     }
 
     // մետասիմվոլներ
-    private fun metasymbol(): Lexeme
-    {
+    private fun metasymbol(): Lexeme {
         val ms = ch
-        val kind = when(ms) {
+        val kind = when (ms) {
             '(' -> Token.ՁԱԽ_ՓԱԿԱԳԻԾ
             ')' -> Token.ԱՋ_ՓԱԿԱԳԻԾ
             ',' -> Token.ՍՏՈՐԱԿԵՏ
@@ -230,7 +223,7 @@ class Scanner constructor(filePath: Path) {
 
     // հայկական կետադրական նշաններ
     private fun isPunct(c: Char) =
-        c == '՞' || c == '՜' || c == '՛'
+            c == '՞' || c == '՜' || c == '՛'
 
     // կարդալ մեկ նիշ
     private fun read() = input.read().toChar()

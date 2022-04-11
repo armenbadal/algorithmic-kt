@@ -2,12 +2,12 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.6.20"
     jacoco
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -16,17 +16,17 @@ dependencies {
 }
 
 application {
-    mainClassName = "algorithmic.main.MainKt"
+    mainClass.set("algorithmic.main.MainKt")
 }
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = application.mainClassName
+        attributes["Main-Class"] = application.mainClass
     }
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "14"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.withType<JavaCompile> {

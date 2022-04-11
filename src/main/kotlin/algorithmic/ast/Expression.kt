@@ -10,7 +10,7 @@ class Numeric(val value: Double) : Expression(Scalar.REAL)
 class Text(val value: String) : Expression(Scalar.TEXT)
 
 // տրամաբանական
-class Logical(val value: String) : Expression(Scalar.BOOL)
+class Logical(val value: Boolean) : Expression(Scalar.BOOL)
 
 // փոփոխական
 class Variable(val sym: Symbol) : Expression(sym.type)

@@ -1,4 +1,4 @@
-package algorithmic.compiler
+package algorithmic.codegen
 
 import algorithmic.ast.*
 import algorithmic.ast.Array
@@ -20,15 +20,14 @@ class ByteCode(private val program: Program) {
     private lateinit var methodGenerator: MethodGen
     private val nameIndices = hashMapOf<String, Int>()
 
-    fun compile(place: Path)
-    {
+    fun generate(place: Path) {
         // դասը գեներացնող օբյեկտը
         classGenerator = ClassGen(
                 className, // անունը
                 "java.lang.Object", // բազային դասը
                 "<generated>", // սկզբնական կոդի ֆայլի անունը
                 Const.ACC_PUBLIC.toInt() or Const.ACC_SUPER.toInt(), // հասանելիությունը
-                arrayOf()) // իրականացվոած ինտերֆեյսների ցուցակը
+                arrayOf()) // իրականացված ինտերֆեյսների ցուցակը
         constantPool = classGenerator.constantPool
         factory = InstructionFactory(classGenerator, constantPool)
         instructions = InstructionList()
@@ -43,17 +42,16 @@ class ByteCode(private val program: Program) {
         classGenerator.javaClass.dump(path.toString())
     }
 
-    private fun entryPoint()
-    {
+    private fun entryPoint() {
         methodGenerator = MethodGen(
-            Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt(),
-            toBcelType(VOID),
-            arrayOf(ArrayType(toBcelType(Scalar.TEXT), 1)),
-            arrayOf("args"),
-            "main",
-            className,
-            instructions,
-            constantPool)
+                Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt(),
+                toBcelType(VOID),
+                arrayOf(ArrayType(toBcelType(Scalar.TEXT), 1)),
+                arrayOf("args"),
+                "main",
+                className,
+                instructions,
+                constantPool)
 
         code(program.body)
         instructions.append(InstructionFactory.createReturn(toBcelType(VOID)))
@@ -73,8 +71,7 @@ class ByteCode(private val program: Program) {
      * ալգորիթմի արդյունքի տիպը որոշվում է [bcelType] արտապատկերման
      * կանոններով։
      */
-    private fun code(alg: Algorithm)
-    {
+    private fun code(alg: Algorithm) {
         // հասանելիության որոշումը՝ public static
         val accessFlags = Const.ACC_STATIC.toInt() or Const.ACC_PUBLIC.toInt()
         // պարամետրերի տիպերի ցուցակը
@@ -83,25 +80,25 @@ class ByteCode(private val program: Program) {
         val parNames = alg.parameters.map { it.id }
         // մեթոդը կառուցող օբյեկտ
         methodGenerator = MethodGen(
-            accessFlags,
-            toBcelType(alg.returnType),
-            parTypes.toTypedArray(),
-            parNames.toTypedArray(),
-            alg.name,
-            className,
-            instructions,
-            constantPool)
+                accessFlags,
+                toBcelType(alg.returnType),
+                parTypes.toTypedArray(),
+                parNames.toTypedArray(),
+                alg.name,
+                className,
+                instructions,
+                constantPool)
 
         // վերցնել մեթոդի պարամետրերի ինդեքսները
         nameIndices.clear()
         methodGenerator.localVariables.forEach { nameIndices[it.name] = it.index }
 
         // հայտարարել լոկալ փոփոխականները և վերագրել լռելության արժեքները
-        for( vr in alg.locals ) {
+        for (vr in alg.locals) {
             val ty = toBcelType(vr.type)
             val lv = methodGenerator.addLocalVariable(vr.id, ty, null, null)
             nameIndices[vr.id] = lv.index
-            when( vr.type ) {
+            when (vr.type) {
                 Scalar.REAL -> instructions.append(factory.createConstant(0.0))
                 Scalar.TEXT -> instructions.append(factory.createConstant(""))
                 Scalar.BOOL -> instructions.append(factory.createConstant(false))
@@ -112,7 +109,7 @@ class ByteCode(private val program: Program) {
 
         // մեթոդի մարմինը
         code(alg.body)
-        if( alg.returnType == VOID )
+        if (alg.returnType == VOID)
             instructions.append(InstructionFactory.createReturn(toBcelType(VOID)))
 
         methodGenerator.setMaxStack()
@@ -123,9 +120,8 @@ class ByteCode(private val program: Program) {
         instructions.dispose()
     }
 
-    private fun code(stat: Statement)
-    {
-        when( stat ) {
+    private fun code(stat: Statement) =
+        when (stat) {
             is Sequence -> code(stat)
             is Assignment -> code(stat)
             is Branching -> code(stat)
@@ -133,26 +129,22 @@ class ByteCode(private val program: Program) {
             is Result -> code(stat)
             is Call -> code(stat)
         }
-    }
 
-    private fun code(seq: Sequence)
-    {
+    private fun code(seq: Sequence) {
         seq.items.forEach { code(it) }
     }
 
-    private fun code(asg: Assignment)
-    {
+    private fun code(asg: Assignment) {
         code(asg.value)
         val ix = nameIndices[asg.sym.id]!!
         instructions.append(InstructionFactory.createStore(toBcelType(asg.sym.type), ix))
     }
 
-    private fun code(bra: Branching)
-    {
+    private fun code(bra: Branching) {
         // ԵԹԵ և ԻՍԿ ԵԹԵ ճյուղերից ցիկլի վերջին անցման հղումներ
         val gofis = arrayListOf<BranchInstruction>()
         var p: Statement = bra
-        while( p is Branching ) {
+        while (p is Branching) {
             // ճյուղավորման պայմանը
             code(p.condition)
             val bri = createIfJump(Const.IFEQ)
@@ -168,8 +160,8 @@ class ByteCode(private val program: Program) {
         }
 
         // վերջին else բլոկը
-        if( p is Sequence )
-            if( p.items.isNotEmpty() )
+        if (p is Sequence)
+            if (p.items.isNotEmpty())
                 code(p)
 
         // ճյուղավորման վերջը
@@ -188,8 +180,7 @@ class ByteCode(private val program: Program) {
      *        goto begin
      *  end:  nop
      */
-    private fun code(rep: Repetition)
-    {
+    private fun code(rep: Repetition) {
         // կրկնման սկիզբը
         val bg = instructions.append(createNop())
         // պայման, որը ստուգվում է ամեն կրկնությունից առաջ
@@ -215,8 +206,7 @@ class ByteCode(private val program: Program) {
      *   areturn
      *   return
      */
-    private fun code(rs: Result)
-    {
+    private fun code(rs: Result) {
         code(rs.value)
         instructions.append(InstructionFactory.createReturn(toBcelType(rs.value.type)))
     }
@@ -224,14 +214,12 @@ class ByteCode(private val program: Program) {
     /**
      * Ալգորիթմի կիրառում։
      */
-    private fun code(cl: Call)
-    {
+    private fun code(cl: Call) {
         code(cl.apply)
     }
 
-    private fun code(expr: Expression)
-    {
-        when( expr ) {
+    private fun code(expr: Expression) =
+        when (expr) {
             is Binary -> code(expr)
             is Unary -> code(expr)
             is Apply -> code(expr)
@@ -240,50 +228,43 @@ class ByteCode(private val program: Program) {
             is Variable -> code(expr)
             is Logical -> code(expr)
         }
-    }
 
-    private fun code(bi: Binary)
-    {
-        when( bi.operation ) {
+    private fun code(bi: Binary) =
+        when (bi.operation) {
             in Operation.ADD..Operation.MOD -> arithmetic(bi)
             in Operation.EQ..Operation.LE -> comparison(bi)
             in Operation.AND..Operation.OR -> logical(bi)
             else -> {}
         }
-    }
 
-    private fun arithmetic(bi: Binary)
-    {
-        if( bi.operation == Operation.MOD ) {
+    private fun arithmetic(bi: Binary) {
+        if (bi.operation == Operation.MOD) {
             code(bi.left)
             instructions.append(InstructionConst.D2I)
             code(bi.right)
             instructions.append(InstructionConst.D2I)
             instructions.append(InstructionConst.IREM)
             instructions.append(InstructionConst.I2D)
-        }
-        else {
+        } else {
             code(bi.left)
             code(bi.right)
             instructions.append(InstructionFactory.createBinaryOperation(bi.operation.text, toBcelType(Scalar.REAL)))
         }
     }
 
-    private fun comparison(bi: Binary)
-    {
+    private fun comparison(bi: Binary) {
         code(bi.left)
         code(bi.right)
 
         if (bi.left.type == Scalar.TEXT && bi.right.type == Scalar.TEXT) {
             val inv = factory.createInvoke(
                     "Algorithmic",
-                    if( bi.operation == Operation.EQ ) "eq" else "ne",
+                    if (bi.operation == Operation.EQ) "eq" else "ne",
                     toBcelType(Scalar.BOOL),
                     arrayOf(toBcelType(Scalar.TEXT), toBcelType(Scalar.TEXT)),
                     Const.INVOKESTATIC)
             instructions.append(inv)
-        }
-        else {
+        } else {
             instructions.append(InstructionConst.DCMPL)
             val opcode = when (bi.operation) {
                 Operation.EQ -> Const.IFNE
@@ -303,9 +284,8 @@ class ByteCode(private val program: Program) {
         }
     }
 
-    private fun logical(bi: Binary)
-    {
-        if( bi.operation == Operation.AND ) {
+    private fun logical(bi: Binary) {
+        if (bi.operation == Operation.AND) {
             code(bi.left)
             val zr0 = instructions.append(createIfJump(Const.IFEQ))
             code(bi.right)
@@ -316,8 +296,7 @@ class ByteCode(private val program: Program) {
             zr0.target = zc
             zr1.target = zc
             en.target = instructions.append(createNop())
-        }
-        else if( bi.operation == Operation.OR ) {
+        } else if (bi.operation == Operation.OR) {
             code(bi.left)
             val ne = instructions.append(createIfJump(Const.IFNE))
             code(bi.right)
@@ -329,12 +308,11 @@ class ByteCode(private val program: Program) {
         }
     }
 
-    private fun code(un: Unary)
-    {
+    private fun code(un: Unary) {
         code(un.right)
-        if( un.operation == Operation.SUB )
+        if (un.operation == Operation.SUB)
             instructions.append(InstructionConst.DNEG)
-        else if( un.operation == Operation.NOT ) {
+        else if (un.operation == Operation.NOT) {
             val ne = instructions.append(createIfJump(Const.IFNE))
             instructions.append(factory.createConstant(1))
             val en = instructions.append(createGoto(null))
@@ -343,8 +321,7 @@ class ByteCode(private val program: Program) {
         }
     }
 
-    private fun code(ap: Apply)
-    {
+    private fun code(ap: Apply) {
         val els = ap.callee.name.split('.')
         val base = if (els.size == 2) els[0] else className
         val name = if (els.size == 2) els[1] else els[0]
@@ -360,39 +337,34 @@ class ByteCode(private val program: Program) {
         instructions.append(inv)
     }
 
-    private fun code(lg: Logical)
-    {
-        instructions.append(factory.createConstant(lg.value == "ՃԻՇՏ"))
+    private fun code(lg: Logical) {
+        instructions.append(factory.createConstant(lg.value))
     }
 
-    private fun code(tx: Text)
-    {
+    private fun code(tx: Text) {
         instructions.append(factory.createConstant(tx.value))
     }
 
-    private fun code(nm: Numeric)
-    {
+    private fun code(nm: Numeric) {
         instructions.append(factory.createConstant(nm.value))
     }
 
-    private fun code(vr: Variable)
-    {
+    private fun code(vr: Variable) {
         val ix = nameIndices[vr.sym.id]!!
         instructions.append(InstructionFactory.createLoad(toBcelType(vr.sym.type), ix))
     }
 
     private fun createGoto(target: InstructionHandle?) =
-        InstructionFactory.createBranchInstruction(Const.GOTO, target)
+            InstructionFactory.createBranchInstruction(Const.GOTO, target)
 
     private fun createIfJump(opcode: Short) =
-        InstructionFactory.createBranchInstruction(opcode, null)
+            InstructionFactory.createBranchInstruction(opcode, null)
 
     private fun createNop() =
-        InstructionFactory.createNull(toBcelType(VOID))
+            InstructionFactory.createNull(toBcelType(VOID))
 
     // Ալգորիթմական լեզվի տիպերի արտապատկերումը BCEL տիպերին։
-    private fun toBcelType(et: Type): org.apache.bcel.generic.Type
-    {
+    private fun toBcelType(et: Type): org.apache.bcel.generic.Type {
         if (et is Scalar)
             return when (et) {
                 Scalar.TEXT -> org.apache.bcel.generic.Type.STRING

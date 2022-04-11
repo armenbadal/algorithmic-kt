@@ -15,14 +15,13 @@ enum class Scalar(val text: String) : Type {
 }
 
 class Array(val size: Int, val base: Type) : Type {
-    override fun equals(other: Any?): Boolean
-    {
-        if( other is Array )
+    override fun equals(other: Any?): Boolean {
+        if (other is Array)
             return other.size == size && other.base == base
 
         return false
     }
 
     override fun toString(): String =
-        "$base աղս [$size]"
+            "$base աղս [$size]"
 }

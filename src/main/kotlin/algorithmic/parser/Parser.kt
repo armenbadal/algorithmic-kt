@@ -8,27 +8,30 @@ class Parser constructor(private val scanner: Scanner) {
 
     // հրամանների FIRST բազմությունը
     private val firstStat = arrayOf(Token.ԱՆՈՒՆ, Token.ԵԹԵ, Token.ՔԱՆԻ, Token.ԱՐԴՅՈՒՆՔ)
+
     // արտահայտությունների FIRST բազմությունը
     private val firstExpr = arrayOf(Token.ԹՎԱՅԻՆ, Token.ՏԵՔՍՏԱՅԻՆ,
             Token.ԱՆՈՒՆ, Token.ՁԱԽ_ՓԱԿԱԳԻԾ, Token.ADD, Token.SUB)
 
     // սիմվոլների աղյուսակ
     private val symbolTable = arrayListOf<Symbol>()
+
     // ընթացիկ վերլուծվող ալգորիթմը
     private var current: String = ""
+
     // սահմանված կամ հայտարարված ալգորիթմների վերնագրերը
     private val signatures = builtIns()
+
     // հաջողությամբ վերլուծված ալգորիթմները
     private val algorithms = arrayListOf<Algorithm>()
 
     // վերլուծել ծրագիրը
-    fun parse(): Program
-    {
+    fun parse(): Program {
         match(Token.ԾՐԱԳԻՐ)
         val name = match(Token.ԱՆՈՒՆ)
 
         // ալգորիթմների սահմանումների և հայտարարությունների շարք
-        while( see(Token.ԱԼԳՈՐԻԹՄ) )
+        while (see(Token.ԱԼԳՈՐԻԹՄ))
             algorithm()
 
         // պարտադիր կատարվող բլոկ
@@ -40,8 +43,7 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // վերլուծել մեկ ալգորիթմ
-    private fun algorithm()
-    {
+    private fun algorithm() {
         match(Token.ԱԼԳՈՐԻԹՄ)
         val resultType = type(true)
         val name = match(Token.ԱՆՈՒՆ)
@@ -50,9 +52,9 @@ class Parser constructor(private val scanner: Scanner) {
         symbolTable.clear()
 
         // պարամետրերի ցուցակ
-        if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) ) {
+        if (see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)) {
             pass()
-            if ( !see(Token.ԱՋ_ՓԱԿԱԳԻԾ) )
+            if (!see(Token.ԱՋ_ՓԱԿԱԳԻԾ))
                 declarationList(true, Token.ՍՏՈՐԱԿԵՏ)
             match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
         }
@@ -63,13 +65,13 @@ class Parser constructor(private val scanner: Scanner) {
         current = name
 
         // երբ սա պարզապես հայտարարություն է
-        if( see(Token.ՍՏՈՐԵՎ) ) {
+        if (see(Token.ՍՏՈՐԵՎ)) {
             pass()
             return
         }
 
         // լոկալ անուններ
-        if ( !see(Token.ՍԿԻԶԲ) )
+        if (!see(Token.ՍԿԻԶԲ))
             declarationList(false, Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)
 
         // մարմին
@@ -83,41 +85,38 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // տիպի վերլուծություն
-    private fun type(opt: Boolean): Type
-    {
-        if( see(Token.ԻՐԱԿԱՆ) )
+    private fun type(opt: Boolean): Type {
+        if (see(Token.ԻՐԱԿԱՆ))
             return asType(pass())
 
-        if( see(Token.ՏԵՔՍՏ) )
+        if (see(Token.ՏԵՔՍՏ))
             return asType(pass())
 
-        if( see(Token.ԲՈՒԼՅԱՆ) )
+        if (see(Token.ԲՈՒԼՅԱՆ))
             return asType(pass())
 
-        if( opt )
+        if (opt)
             return VOID
 
         throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
     }
 
     // հայտարարությունների շարք
-    private fun declarationList(single: Boolean, sep: Token)
-    {
+    private fun declarationList(single: Boolean, sep: Token) {
         declaration(single)
-        while( see(sep) ) {
+        while (see(sep)) {
             pass()
             declaration(single)
         }
     }
 
     // վերլուծել մեկ հայտարարություն
-    private fun declaration(single: Boolean)
-    {
+    private fun declaration(single: Boolean) {
         val ty = type(false)
 
         oneNameWithCheck(ty)
-        if( !single ) {
-            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
+        if (!single) {
+            while (see(Token.ՍՏՈՐԱԿԵՏ)) {
                 match(Token.ՍՏՈՐԱԿԵՏ)
                 oneNameWithCheck(ty)
             }
@@ -125,25 +124,23 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // հայտարարված մեկ անունի ստուգելը
-    private fun oneNameWithCheck(ty: Type)
-    {
+    private fun oneNameWithCheck(ty: Type) {
         val line = scanner.getLine()
         val nm = match(Token.ԱՆՈՒՆ)
         val sym = Symbol(nm, ty)
 
-        if( symbolTable.contains(sym) )
+        if (symbolTable.contains(sym))
             throw ParseError("«${sym.id}» անունն արդեն հայտարարված է", line)
         symbolTable.add(sym)
     }
 
     // հրամանների հաջորդականություն
-    private fun sequence(): Sequence
-    {
+    private fun sequence(): Sequence {
         val seq = Sequence()
 
-        if( see(*firstStat) ) {
+        if (see(*firstStat)) {
             seq.items.add(statement())
-            while( see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ) ) {
+            while (see(Token.ԿԵՏ_ՍՏՈՐԱԿԵՏ)) {
                 pass()
                 seq.items.add(statement())
             }
@@ -154,31 +151,29 @@ class Parser constructor(private val scanner: Scanner) {
 
     // մեկ կառուցվածքի վերլուծություն
     private fun statement() =
-        when {
-            see(Token.ԱՆՈՒՆ) -> assignmentOrCall()
-            see(Token.ԵԹԵ) -> branching(true)
-            see(Token.ՔԱՆԻ) -> repetition()
-            see(Token.ԱՐԴՅՈՒՆՔ) -> result()
-            else -> throw ParseError("Սպասվում էր ԱՆՈՒՆ, ԵԹԵ, ՔԱՆԻ կամ ԱՐԴՅՈՒՆՔ, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
-        }
+            when {
+                see(Token.ԱՆՈՒՆ) -> assignmentOrCall()
+                see(Token.ԵԹԵ) -> branching(true)
+                see(Token.ՔԱՆԻ) -> repetition()
+                see(Token.ԱՐԴՅՈՒՆՔ) -> result()
+                else -> throw ParseError("Սպասվում էր ԱՆՈՒՆ, ԵԹԵ, ՔԱՆԻ կամ ԱՐԴՅՈՒՆՔ, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
+            }
 
     // վերագրում կամ ալգորիթմի կիրառում
-    private fun assignmentOrCall(): Statement
-    {
+    private fun assignmentOrCall(): Statement {
         val name = match(Token.ԱՆՈՒՆ)
 
-        if( see(Token.ՎԵՐԱԳՐԵԼ) )
+        if (see(Token.ՎԵՐԱԳՐԵԼ))
             return assignment(name)
 
-        if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
+        if (see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ))
             return algorithmCall(name)
 
         throw ParseError("Սպասվում էր «:=» կամ «(», բայց հանդիպել է «${lookahead.value}»", scanner.getLine())
     }
 
     // վերագրում
-    private fun assignment(name: String): Assignment
-    {
+    private fun assignment(name: String): Assignment {
         match(Token.ՎԵՐԱԳՐԵԼ)
         val sym = lookup(name)
         val value = expression()
@@ -186,9 +181,8 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // ալգորիթմի կիրառում
-    private fun algorithmCall(name: String): Call
-    {
-        if( !signatures.containsKey(name) )
+    private fun algorithmCall(name: String): Call {
+        if (!signatures.containsKey(name))
             throw ParseError("«$name» ալգորիթմը հայտարարված կամ սհմանված չէ", scanner.getLine())
 
         match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
@@ -196,19 +190,18 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
 
         val candidate = signatures.getValue(name)
-        if( !candidate.isApplicable(arguments) )
+        if (!candidate.isApplicable(arguments))
             throw TypeError("«$name» ալգորիթմը սահմանված է «$candidate» պարամետրով:", scanner.getLine())
 
         return Call(candidate, arguments)
     }
 
     // արտահայտությունների ցուցակ
-    private fun expressionList(): List<Expression>
-    {
+    private fun expressionList(): List<Expression> {
         val exprs = arrayListOf<Expression>()
-        if( see(*firstExpr) ) {
+        if (see(*firstExpr)) {
             exprs.add(expression())
-            while( see(Token.ՍՏՈՐԱԿԵՏ) ) {
+            while (see(Token.ՍՏՈՐԱԿԵՏ)) {
                 pass()
                 exprs.add(expression())
             }
@@ -217,8 +210,7 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // ճյուղավորում
-    private fun branching(closing: Boolean): Branching
-    {
+    private fun branching(closing: Boolean): Branching {
         match(Token.ԵԹԵ)
         val cond = expression()
         match(Token.ԱՊԱ)
@@ -236,14 +228,13 @@ class Parser constructor(private val scanner: Scanner) {
                 Sequence()
             }
         }
-        if( closing )
+        if (closing)
             match(Token.ԱՎԱՐՏ)
         return Branching(cond, decision, alternative)
     }
 
     // կրկնություն
-    private fun repetition(): Repetition
-    {
+    private fun repetition(): Repetition {
         match(Token.ՔԱՆԻ)
         match(Token.ԴԵՌ)
         val cond = expression()
@@ -254,16 +245,15 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // արդյունք
-    private fun result(): Statement
-    {
+    private fun result(): Statement {
         val expType = signatures.getValue(current).resultType
 
-        if( expType == VOID )
+        if (expType == VOID)
             throw ParseError("ԱՐԴՅՈՒՆՔ հրամանը չի կարելի օգտագործել այս ալգորիթմում։", scanner.getLine())
 
         match(Token.ԱՐԴՅՈՒՆՔ)
         val value = expression()
-        if( value.type != expType )
+        if (value.type != expType)
             throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ ${expType} tipi ar=eq", scanner.getLine())
         return Result(value)
     }
@@ -273,14 +263,13 @@ class Parser constructor(private val scanner: Scanner) {
         disjunction()
 
     // դիզյունկցիա
-    private fun disjunction(): Expression
-    {
+    private fun disjunction(): Expression {
         var left = conjunction()
-        while( see(Token.ԿԱՄ) ) {
+        while (see(Token.ԿԱՄ)) {
             pass()
             val oper = asOperation("ԿԱՄ")
             val right = conjunction()
-            if( left.type != Scalar.BOOL || right.type != Scalar.BOOL )
+            if (left.type != Scalar.BOOL || right.type != Scalar.BOOL)
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
             left = Binary(oper, Scalar.BOOL, left, right)
         }
@@ -288,14 +277,13 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // կոնյունկցիա
-    private fun conjunction(): Expression
-    {
+    private fun conjunction(): Expression {
         var left = equality()
-        while( see(Token.ԵՎ) ) {
+        while (see(Token.ԵՎ)) {
             pass()
             val oper = asOperation("ԵՎ")
             val right = equality()
-            if( left.type != Scalar.BOOL || right.type != Scalar.BOOL )
+            if (left.type != Scalar.BOOL || right.type != Scalar.BOOL)
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
             left = Binary(oper, Scalar.BOOL, left, right)
         }
@@ -303,13 +291,12 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // հավասարություն
-    private fun equality(): Expression
-    {
+    private fun equality(): Expression {
         var left = comparison()
-        if( see(Token.EQ, Token.NE) ) {
+        if (see(Token.EQ, Token.NE)) {
             val oper = asOperation(pass())
             val right = comparison()
-            if( left.type != right.type )
+            if (left.type != right.type)
                 throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
             left = Binary(oper, Scalar.BOOL, left, right)
         }
@@ -317,18 +304,17 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // համեմատություն
-    private fun comparison(): Expression
-    {
+    private fun comparison(): Expression {
         var left = addition()
-        if( see(Token.GT, Token.GE, Token.LT, Token.LE) ) {
+        if (see(Token.GT, Token.GE, Token.LT, Token.LE)) {
             val oper = asOperation(pass())
             val right = addition()
             // տիպերի ստուգում
-            if( left.type == Scalar.TEXT || right.type == Scalar.TEXT )
+            if (left.type == Scalar.TEXT || right.type == Scalar.TEXT)
                 throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ՏԵՔՍՏային արժեքներին։", scanner.getLine())
-            if( left.type == Scalar.BOOL || right.type == Scalar.BOOL )
+            if (left.type == Scalar.BOOL || right.type == Scalar.BOOL)
                 throw TypeError("«${oper.text}» գործողությունը կիրառելի չէ ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
-            if( left.type != right.type )
+            if (left.type != right.type)
                 throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
             left = Binary(oper, Scalar.BOOL, left, right)
         }
@@ -336,13 +322,12 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // գումար
-    private fun addition(): Expression
-    {
+    private fun addition(): Expression {
         var left = multiplication()
-        while( see(Token.ADD, Token.SUB) ) {
+        while (see(Token.ADD, Token.SUB)) {
             val oper = asOperation(pass())
             val right = multiplication()
-            if( left.type != Scalar.REAL || right.type != Scalar.REAL )
+            if (left.type != Scalar.REAL || right.type != Scalar.REAL)
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
             left = Binary(oper, Scalar.REAL, left, right)
         }
@@ -350,13 +335,12 @@ class Parser constructor(private val scanner: Scanner) {
     }
 
     // արտադրյալ
-    private fun multiplication(): Expression
-    {
+    private fun multiplication(): Expression {
         var left = factor()
-        while( see(Token.MUL, Token.DIV, Token.MOD) ) {
+        while (see(Token.MUL, Token.DIV, Token.MOD)) {
             val oper = asOperation(pass())
             val right = factor()
-            if( left.type != Scalar.REAL || right.type != Scalar.REAL )
+            if (left.type != Scalar.REAL || right.type != Scalar.REAL)
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
             left = Binary(oper, Scalar.REAL, left, right)
         }
@@ -365,58 +349,56 @@ class Parser constructor(private val scanner: Scanner) {
 
     // ամենապարզ արտահայտությունը
     private fun factor(): Expression =
-        when (lookahead.token) {
-            Token.ԹՎԱՅԻՆ -> {
-                val value = pass()
-                Numeric(value.toDouble())
-            }
-            Token.ՏԵՔՍՏԱՅԻՆ -> {
-                val value = pass()
-                Text(value)
-            }
-            Token.ԱՆՈՒՆ -> {
-                val name = pass()
-                if( see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ) )
-                    apply(name)
-                else if( see(Token.ՁԱԽ_ԻՆԴԵՔՍ) ) {
-                    pass()
-                    val inx = expression()
-                    match(Token.ԱՋ_ԻՆԴԵՔՍ)
-                    val sa = lookup(name)
-                    Binary(Operation.INDEX, sa.type, Variable(sa), inx)
+            when (lookahead.token) {
+                Token.ԹՎԱՅԻՆ -> {
+                    val value = pass()
+                    Numeric(value.toDouble())
                 }
-                else
-                    Variable(lookup(name))
+                Token.ՏԵՔՍՏԱՅԻՆ -> {
+                    val value = pass()
+                    Text(value)
+                }
+                Token.ԱՆՈՒՆ -> {
+                    val name = pass()
+                    if (see(Token.ՁԱԽ_ՓԱԿԱԳԻԾ))
+                        apply(name)
+                    else if (see(Token.ՁԱԽ_ԻՆԴԵՔՍ)) {
+                        pass()
+                        val inx = expression()
+                        match(Token.ԱՋ_ԻՆԴԵՔՍ)
+                        val sa = lookup(name)
+                        Binary(Operation.INDEX, sa.type, Variable(sa), inx)
+                    } else
+                        Variable(lookup(name))
+                }
+                Token.ՃԻՇՏ, Token.ԿԵՂԾ -> {
+                    val value = pass()
+                    Logical(value == "ՃԻՇՏ")
+                }
+                Token.SUB, Token.ADD, Token.ՈՉ -> {
+                    val oper = asOperation(pass())
+                    val right = factor()
+                    // տիպերի ստուգում
+                    if (oper == Operation.NOT && right.type != Scalar.BOOL)
+                        throw TypeError("«ՈՉ» գործողությունը կիրառելի է միայն ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
+                    if ((oper == Operation.SUB || oper == Operation.ADD) && right.type != Scalar.REAL)
+                        throw TypeError("«${oper.text}» գործողությունը կիրառելի է միայն ԻՐԱԿԱՆ արժեքներին։", scanner.getLine())
+                    Unary(oper, right.type, right)
+                }
+                Token.ՁԱԽ_ՓԱԿԱԳԻԾ -> {
+                    pass()
+                    val expr = expression()
+                    match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
+                    expr
+                }
+                else -> {
+                    throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.getLine())
+                }
             }
-            Token.ՃԻՇՏ, Token.ԿԵՂԾ -> {
-                val value = pass()
-                Logical(value)
-            }
-            Token.SUB, Token.ADD, Token.ՈՉ -> {
-                val oper = asOperation(pass())
-                val right = factor()
-                // տիպերի ստուգում
-                if( oper == Operation.NOT && right.type != Scalar.BOOL )
-                    throw TypeError("«ՈՉ» գործողությունը կիրառելի է միայն ԲՈՒԼՅԱՆ արժեքներին։", scanner.getLine())
-                if( (oper == Operation.SUB || oper == Operation.ADD) && right.type != Scalar.REAL )
-                    throw TypeError("«${oper.text}» գործողությունը կիրառելի է միայն ԻՐԱԿԱՆ արժեքներին։", scanner.getLine())
-                Unary(oper, right.type, right)
-            }
-            Token.ՁԱԽ_ՓԱԿԱԳԻԾ -> {
-                pass()
-                val expr = expression()
-                match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
-                expr
-            }
-            else -> {
-                throw ParseError("Ստպասվում է պարզ արտահայտություն", scanner.getLine())
-            }
-        }
 
     // ֆունկցիա ալգորիթմի կանչ
-    private fun apply(name: String): Expression
-    {
-        if( !signatures.containsKey(name) )
+    private fun apply(name: String): Expression {
+        if (!signatures.containsKey(name))
             throw ParseError("«$name» ալգորիթմը հայտարարված կամ սահմանված չէ", scanner.getLine())
 
         match(Token.ՁԱԽ_ՓԱԿԱԳԻԾ)
@@ -424,42 +406,39 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ԱՋ_ՓԱԿԱԳԻԾ)
 
         val candidate = signatures.getValue(name)
-        if( !candidate.isApplicable(arguments) )
+        if (!candidate.isApplicable(arguments))
             throw TypeError("«$name» ալգորիթմը սահմանված է «$candidate» պարամետրով:", scanner.getLine())
 
         return Apply(candidate, arguments)
     }
 
     private fun see(exp: Token): Boolean =
-        lookahead.token == exp
+            lookahead.token == exp
 
     private fun see(vararg exps: Token): Boolean =
-        exps.contains(lookahead.token)
+            exps.contains(lookahead.token)
 
     // կարդալ հաջորդ լեքսեմը և վերադարձնել նախորդի արժեքը
-    private fun pass(): String
-    {
+    private fun pass(): String {
         val lex = lookahead.value
         lookahead = scanner.next()
         return lex
     }
 
     // հաստատել lookahead-ը և կարդալ հաջորդը
-    private fun match(exp: Token): String
-    {
-        if( see(exp) )
+    private fun match(exp: Token): String {
+        if (see(exp))
             return pass()
 
         throw ParseError("Սպասվում է $exp, բայց գրված է «${lookahead.value}»։", scanner.getLine())
     }
 
     // որոնել սիմվոլների աղյուսակում
-    private fun lookup(name: String): Symbol
-    {
+    private fun lookup(name: String): Symbol {
 //        for( sym in symbolTable )
 //            if( sym.id == name )
 //                return sym
-        return symbolTable.find { it.id == name } ?:
-            throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
+        return symbolTable.find { it.id == name }
+                ?: throw ParseError("Չհայտարարված փոփոխականի ($name) օգտագործում։", scanner.getLine())
     }
 }
