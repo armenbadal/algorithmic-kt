@@ -15,29 +15,6 @@ class Logical(val value: Boolean) : Expression(Scalar.BOOL)
 // փոփոխական
 class Variable(val sym: Symbol) : Expression(sym.type)
 
-enum class Operation(val text: String) {
-    ADD("+"),
-    SUB("-"),
-    MUL("*"),
-    DIV("/"),
-    MOD("\\"),
-
-    EQ("="),
-    NE("<>"),
-    GT(">"),
-    GE(">="),
-    LT("<"),
-    LE("<="),
-
-    AND("ԵՎ"),
-    OR("ԿԱՄ"),
-    NOT("ՈՉ"),
-
-    INDEX("[]");
-
-    override fun toString(): String = text
-}
-
 // ունար գործողություն
 class Unary(val operation: Operation, type: Type, val right: Expression) : Expression(type)
 

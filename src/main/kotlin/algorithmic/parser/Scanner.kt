@@ -4,7 +4,7 @@ import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Path
 
-class Scanner constructor(filePath: Path) {
+class Scanner(filePath: Path) {
     // ծառայողական բառերի համապատասխանեցումը պիտակներին
     private val keywords = mapOf(
             "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,

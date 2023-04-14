@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     application
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.8.10"
     jacoco
 }
 
@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.apache.bcel:bcel:6.5.0")
+    implementation("org.apache.bcel:bcel:6.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
 

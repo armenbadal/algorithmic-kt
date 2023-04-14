@@ -2,7 +2,7 @@ package algorithmic.parser
 
 import algorithmic.ast.*
 
-class Parser constructor(private val scanner: Scanner) {
+class Parser(private val scanner: Scanner) {
     // look-a-head սիմվոլը
     private var lookahead = scanner.next()
 
@@ -86,14 +86,8 @@ class Parser constructor(private val scanner: Scanner) {
 
     // տիպի վերլուծություն
     private fun type(opt: Boolean): Type {
-        if (see(Token.ԻՐԱԿԱՆ))
-            return asType(pass())
-
-        if (see(Token.ՏԵՔՍՏ))
-            return asType(pass())
-
-        if (see(Token.ԲՈՒԼՅԱՆ))
-            return asType(pass())
+        if (see(Token.ԻՐԱԿԱՆ) || see(Token.ՏԵՔՍՏ) || see(Token.ԲՈՒԼՅԱՆ))
+            return Scalar.from(pass())
 
         if (opt)
             return VOID
@@ -254,7 +248,7 @@ class Parser constructor(private val scanner: Scanner) {
         match(Token.ԱՐԴՅՈՒՆՔ)
         val value = expression()
         if (value.type != expType)
-            throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ ${expType} tipi ar=eq", scanner.getLine())
+            throw TypeError("ԱՐԴՅՈՒՆՔ հրամանին պետք է տալ $expType տիպի արժեք։", scanner.getLine())
         return Result(value)
     }
 
@@ -267,7 +261,7 @@ class Parser constructor(private val scanner: Scanner) {
         var left = conjunction()
         while (see(Token.ԿԱՄ)) {
             pass()
-            val oper = asOperation("ԿԱՄ")
+            val oper = Operation.from("ԿԱՄ")
             val right = conjunction()
             if (left.type != Scalar.BOOL || right.type != Scalar.BOOL)
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
@@ -281,7 +275,7 @@ class Parser constructor(private val scanner: Scanner) {
         var left = equality()
         while (see(Token.ԵՎ)) {
             pass()
-            val oper = asOperation("ԵՎ")
+            val oper = Operation.from("ԵՎ")
             val right = equality()
             if (left.type != Scalar.BOOL || right.type != Scalar.BOOL)
                 throw TypeError("«${oper.text} գործողությունը կիրառելի է ԲՈՒԼՅԱՆ արժեքներին։»", scanner.getLine())
@@ -294,7 +288,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun equality(): Expression {
         var left = comparison()
         if (see(Token.EQ, Token.NE)) {
-            val oper = asOperation(pass())
+            val oper = Operation.from(pass())
             val right = comparison()
             if (left.type != right.type)
                 throw TypeError("«${oper.text}» գործողության երկու կողմերում պետք է լինեն նույն տիպի արժեքներ։", scanner.getLine())
@@ -307,7 +301,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun comparison(): Expression {
         var left = addition()
         if (see(Token.GT, Token.GE, Token.LT, Token.LE)) {
-            val oper = asOperation(pass())
+            val oper = Operation.from(pass())
             val right = addition()
             // տիպերի ստուգում
             if (left.type == Scalar.TEXT || right.type == Scalar.TEXT)
@@ -325,7 +319,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun addition(): Expression {
         var left = multiplication()
         while (see(Token.ADD, Token.SUB)) {
-            val oper = asOperation(pass())
+            val oper = Operation.from(pass())
             val right = multiplication()
             if (left.type != Scalar.REAL || right.type != Scalar.REAL)
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
@@ -338,7 +332,7 @@ class Parser constructor(private val scanner: Scanner) {
     private fun multiplication(): Expression {
         var left = factor()
         while (see(Token.MUL, Token.DIV, Token.MOD)) {
-            val oper = asOperation(pass())
+            val oper = Operation.from(pass())
             val right = factor()
             if (left.type != Scalar.REAL || right.type != Scalar.REAL)
                 throw TypeError("«${oper.text}» գործողությունը թույլատրելի է ԻՐԱԿԱՆ թվերի համար։", scanner.getLine())
@@ -376,7 +370,7 @@ class Parser constructor(private val scanner: Scanner) {
                     Logical(value == "ՃԻՇՏ")
                 }
                 Token.SUB, Token.ADD, Token.ՈՉ -> {
-                    val oper = asOperation(pass())
+                    val oper = Operation.from(pass())
                     val right = factor()
                     // տիպերի ստուգում
                     if (oper == Operation.NOT && right.type != Scalar.BOOL)
