@@ -23,12 +23,8 @@ enum class Operation(val text: String) {
     override fun toString(): String = text
 
     companion object {
-        fun from(text: String): Operation {
-            for(op in values())
-                if(op.text == text)
-                    return op
-
-            throw UnknownOperation("Անծանոթ գործողություն «$text»։")
-        }
+        fun from(text: String): Operation =
+            Operation.values().find{op -> op.text == text}
+                ?: throw UnknownOperation("Անծանոթ գործողություն «$text»։")
     }
 }

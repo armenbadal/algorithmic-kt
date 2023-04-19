@@ -7,49 +7,49 @@ import java.nio.file.Path
 class Scanner(filePath: Path) {
     // ծառայողական բառերի համապատասխանեցումը պիտակներին
     private val keywords = mapOf(
-            "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
-            "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
-            "ԿԱՏԱՐԵԼ" to Token.ԿԱՏԱՐԵԼ,
-            "ԱԼԳՈՐԻԹՄ" to Token.ԱԼԳՈՐԻԹՄ,
-            "ՍՏՈՐԵՎ" to Token.ՍՏՈՐԵՎ,
-            "ՍԿԻԶԲ" to Token.ՍԿԻԶԲ,
-            "ՎԵՐՋ" to Token.ՎԵՐՋ,
-            "ԵԹԵ" to Token.ԵԹԵ,
-            "ԱՊԱ" to Token.ԱՊԱ,
-            "ԻՍԿ" to Token.ԻՍԿ,
-            "ԱՅԼԱՊԵՍ" to Token.ԱՅԼԱՊԵՍ,
-            "ԱՎԱՐՏ" to Token.ԱՎԱՐՏ,
-            "ՔԱՆԻ" to Token.ՔԱՆԻ,
-            "ԴԵՌ" to Token.ԴԵՌ,
-            "ԱՐԴՅՈՒՆՔ" to Token.ԱՐԴՅՈՒՆՔ,
-            "ԵՎ" to Token.ԵՎ,
-            "ԿԱՄ" to Token.ԿԱՄ,
-            "ՈՉ" to Token.ՈՉ,
-            "ԻՐԱԿԱՆ" to Token.ԻՐԱԿԱՆ,
-            "ՏԵՔՍՏ" to Token.ՏԵՔՍՏ,
-            "ԲՈՒԼՅԱՆ" to Token.ԲՈՒԼՅԱՆ,
-            "ՃԻՇՏ" to Token.ՃԻՇՏ,
-            "ԿԵՂԾ" to Token.ԿԵՂԾ,
-            "ԱՂՅՈՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ,
-            // դասական ուղղագրութեամբ տարբերակները
-            "ՍՏՈՐԵՒ" to Token.ՍՏՈՐԵՎ,
-            "ԵԹԷ" to Token.ԵԹԵ,
-            "ԱՅԼԱՊԷՍ" to Token.ԱՅԼԱՊԵՍ,
-            "ԱՒԱՐՏ" to Token.ԱՎԱՐՏ,
-            "ԱՐԴԻՒՆՔ" to Token.ԱՐԴՅՈՒՆՔ,
-            "ԵՒ" to Token.ԵՎ,
-            "ԲՈՒԼԵԱՆ" to Token.ԲՈՒԼՅԱՆ,
-            "ԱՂԻՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ
+        "ԾՐԱԳԻՐ" to Token.ԾՐԱԳԻՐ,
+        "ԳՐԱԴԱՐԱՆ" to Token.ԳՐԱԴԱՐԱՆ,
+        "ԿԱՏԱՐԵԼ" to Token.ԿԱՏԱՐԵԼ,
+        "ԱԼԳՈՐԻԹՄ" to Token.ԱԼԳՈՐԻԹՄ,
+        "ՍՏՈՐԵՎ" to Token.ՍՏՈՐԵՎ,
+        "ՍԿԻԶԲ" to Token.ՍԿԻԶԲ,
+        "ՎԵՐՋ" to Token.ՎԵՐՋ,
+        "ԵԹԵ" to Token.ԵԹԵ,
+        "ԱՊԱ" to Token.ԱՊԱ,
+        "ԻՍԿ" to Token.ԻՍԿ,
+        "ԱՅԼԱՊԵՍ" to Token.ԱՅԼԱՊԵՍ,
+        "ԱՎԱՐՏ" to Token.ԱՎԱՐՏ,
+        "ՔԱՆԻ" to Token.ՔԱՆԻ,
+        "ԴԵՌ" to Token.ԴԵՌ,
+        "ԱՐԴՅՈՒՆՔ" to Token.ԱՐԴՅՈՒՆՔ,
+        "ԵՎ" to Token.ԵՎ,
+        "ԿԱՄ" to Token.ԿԱՄ,
+        "ՈՉ" to Token.ՈՉ,
+        "ԻՐԱԿԱՆ" to Token.ԻՐԱԿԱՆ,
+        "ՏԵՔՍՏ" to Token.ՏԵՔՍՏ,
+        "ԲՈՒԼՅԱՆ" to Token.ԲՈՒԼՅԱՆ,
+        "ՃԻՇՏ" to Token.ՃԻՇՏ,
+        "ԿԵՂԾ" to Token.ԿԵՂԾ,
+        "ԱՂՅՈՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ,
+        // դասական ուղղագրութեամբ տարբերակները
+        "ՍՏՈՐԵՒ" to Token.ՍՏՈՐԵՎ,
+        "ԵԹԷ" to Token.ԵԹԵ,
+        "ԱՅԼԱՊԷՍ" to Token.ԱՅԼԱՊԵՍ,
+        "ԱՒԱՐՏ" to Token.ԱՎԱՐՏ,
+        "ԱՐԴԻՒՆՔ" to Token.ԱՐԴՅՈՒՆՔ,
+        "ԵՒ" to Token.ԵՎ,
+        "ԲՈՒԼԵԱՆ" to Token.ԲՈՒԼՅԱՆ,
+        "ԱՂԻՒՍԱԿ" to Token.ԱՂՅՈՒՍԱԿ
     )
 
     // ներմուծման հոսք
     private val input = Files.newBufferedReader(filePath)
 
     // հերթական սիմվոլը
-    private var ch: Char = read()
+    private var ch = read()
 
     // տողի համարը
-    private var line: Int = 1
+    private var line = 1
 
     //
     fun next(): Lexeme {
@@ -80,7 +80,7 @@ class Scanner(filePath: Path) {
     }
 
     // տողի համարը
-    fun getLine(): Int = line
+    fun getLine() = line
 
     // անտեսել բացատները
     private fun whitespaces() {
