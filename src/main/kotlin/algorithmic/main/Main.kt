@@ -13,7 +13,7 @@ fun about() {
 }
 
 fun main(args: Array<String>) {
-    val args = arrayOf("cases/Ֆակտորիալ.ալգ")
+    val args = arrayOf("cases/ex11.alg")
     about()
 
     try {

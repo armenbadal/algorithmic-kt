@@ -89,10 +89,25 @@ class Parser(private val scanner: Scanner) {
 
     // տիպի վերլուծություն
     private fun type(): Type {
-        if (see(*firstType))
-            return Scalar.from(pass())
+        if (!see(*firstType))
+            throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
 
-        throw ParseError("Սպասվում է տիպի անուն, բայց հանդիպել է ${lookahead.value}։", scanner.getLine())
+        val base = Scalar.from(pass())
+
+        if (see(Token.ԱՂՅՈՒՍԱԿ)) {
+            pass()
+            if (see(Token.ՁԱԽ_ԻՆԴԵՔՍ)) {
+                match(Token.ՁԱԽ_ԻՆԴԵՔՍ)
+                val size = match(Token.ԹՎԱՅԻՆ).toInt()
+                match(Token.ԱՋ_ԻՆԴԵՔՍ)
+                if (size <= 0)
+                    throw ParseError("Աղյուսակի չափը պետք է մեծ լինի զրոյից։", scanner.getLine())
+                return Array(size, base)
+            }
+            return Array(0, base)
+        }
+
+        return base
     }
 
     // հայտարարությունների շարք

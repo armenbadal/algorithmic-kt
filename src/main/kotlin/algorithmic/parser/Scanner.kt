@@ -223,7 +223,7 @@ class Scanner(filePath: Path) {
 
     // հայկական կետադրական նշաններ
     private fun isPunct(c: Char) =
-            c == '՞' || c == '՜' || c == '՛'
+        c == '՞' || c == '՜' || c == '՛'
 
     // կարդալ մեկ նիշ
     private fun read() = input.read().toChar()
