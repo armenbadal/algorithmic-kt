@@ -25,11 +25,13 @@ tasks.withType<Jar> {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+    kotlinOptions.jvmTarget = "18"
 }
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+    sourceCompatibility = JavaVersion.VERSION_18.toString()
+    targetCompatibility = JavaVersion.VERSION_18.toString()
 }
 
 tasks.withType<Test> {
